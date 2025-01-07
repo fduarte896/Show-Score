@@ -11,7 +11,7 @@ struct HomeView: View {
     var body: some View {
         NavigationStack {
             List {
-                ForEach(0..<10) {
+                ForEach(0..<20) {
                     Text("Item \( $0 )")
                 }
             }
