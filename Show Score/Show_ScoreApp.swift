@@ -6,12 +6,13 @@
 //
 
 import SwiftUI
+import SwiftData
 
 @main
 struct Show_ScoreApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            HomeView().modelContainer(for: [PopularMoviesResponseModel.self, MovieModel.self, TVShowModel.self, PersonModel.self], inMemory: false, isUndoEnabled: true)
         }
     }
 }
