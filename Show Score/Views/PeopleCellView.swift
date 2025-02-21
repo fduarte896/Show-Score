@@ -8,11 +8,21 @@
 import SwiftUI
 
 struct PeopleCellView: View {
+    
+    var person : PersonModel
     var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
+        VStack{
+            Image(uiImage: person.viewImage)
+                .resizable()
+                .scaledToFit()
+                .frame(width: 100, height: 100)
+                .clipShape(.rect(cornerRadius: 8))
+            Text(person.name)
+            Text(person.knownForDepartment)
+        }
     }
 }
 
-#Preview {
-    PeopleCellView()
-}
+//#Preview {
+//    HomeView().modelContainer(MovieModel.preview)
+//}

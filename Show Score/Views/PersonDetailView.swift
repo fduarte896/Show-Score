@@ -8,11 +8,18 @@
 import SwiftUI
 
 struct PersonDetailView: View {
+    var person : PersonModel
     var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
+        Text(person.name).font(.title)
+        Image(uiImage: person.viewImage)
+            .resizable()
+            .scaledToFit()
+            .frame(height: 300)
+            .clipShape(RoundedRectangle(cornerRadius: 20))
+        Text(person.knownForDepartment).font(.callout)
     }
 }
 
 #Preview {
-    PersonDetailView()
+    PersonDetailView(person: .personSample)
 }

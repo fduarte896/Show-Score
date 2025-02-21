@@ -10,9 +10,13 @@ import SwiftData
 
 @main
 struct Show_ScoreApp: App {
+    
     var body: some Scene {
         WindowGroup {
-            HomeView().modelContainer(for: [PopularMoviesResponseModel.self, MovieModel.self, TVShowModel.self, PersonModel.self], inMemory: false, isUndoEnabled: true)
+            //            SimpleLoginView()
+            //                .modelContainer(for: [PopularMoviesResponseModel.self, MovieModel.self, TVShowModel.self, PersonModel.self], inMemory: false, isUndoEnabled: true)
+            MainView()
+                .modelContainer(for: [PopularMoviesResponseModel.self, MovieModel.self, TVShowModel.self, PersonModel.self, FavoriteMovieModel.self, FavoriteTVShowModel.self], inMemory: false, isUndoEnabled: true)
         }
     }
 }

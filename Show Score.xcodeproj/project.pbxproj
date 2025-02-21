@@ -10,9 +10,33 @@
 		0EE4B8E72D2DB42D00FEC95C /* Show Score.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Show Score.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		0EC08F992D3EAE370056D0AA /* Exceptions for "Show Score" folder in "Show Score" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				"Preview Content/MovieDataPreview.json",
+			);
+			target = 0EE4B8E62D2DB42D00FEC95C /* Show Score */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
+		0EC08F9A2D3EAE370056D0AA /* Exceptions for "Show Score" folder in "Compile Sources" phase from "Show Score" target */ = {
+			isa = PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet;
+			buildPhase = 0EE4B8E32D2DB42D00FEC95C /* Sources */;
+			membershipExceptions = (
+				"Preview Content/MovieDataPreview.json",
+			);
+		};
+/* End PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		0EE4B8E92D2DB42D00FEC95C /* Show Score */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				0EC08F992D3EAE370056D0AA /* Exceptions for "Show Score" folder in "Show Score" target */,
+				0EC08F9A2D3EAE370056D0AA /* Exceptions for "Show Score" folder in "Compile Sources" phase from "Show Score" target */,
+			);
 			path = "Show Score";
 			sourceTree = "<group>";
 		};
@@ -255,6 +279,7 @@
 				DEVELOPMENT_TEAM = RS976WXGSN;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Show-Score-Info.plist";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -284,6 +309,7 @@
 				DEVELOPMENT_TEAM = RS976WXGSN;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Show-Score-Info.plist";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;

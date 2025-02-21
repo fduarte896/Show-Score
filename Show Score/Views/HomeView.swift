@@ -9,145 +9,139 @@ import SwiftUI
 import SwiftData
 
 struct HomeView: View {
-    @Environment(\.modelContext) private var modelContext
-    //Hacer el sorting con el puntaje!
-    @Query private var movies: [MovieModel]
-    @Query private var people: [PersonModel]
-    @Query private var tvShows: [TVShowModel]
+    @Environment(\.modelContext) var modelContext
     
+    @State var viewModel : HomeViewModel
+    
+    @State var orderAscending: Bool = true
 
-    var body: some View {
-        
-        NavigationStack {
-            List {
-                Section("Popular Movies"){
-                    
-                    ScrollView(.horizontal){
-                        HStack{
-                            ForEach(movies) { movie in
-                                CellView(movie: movie)
-                                
-                            }
-                            
-                        }
-                        
-                    }
-                    
-                }
-            }
-                List{
-                    Section("Popular People"){
-
-                        ScrollView(.horizontal){
-                            HStack{
-                                
-                                ForEach(people) { person in
-                                    Text(person.name)
-                                    
-                                }
-                        }
-                        }
-                    }
-                }
-                
-            List{
-                    Section("Popular TV Shows"){
-
-                        ScrollView(.horizontal){
-                            HStack{
-                                
-                                ForEach(tvShows) { tvShow in
-                                    Text(tvShow.originalName)
-                                    
-                                }
-                        }
-                        }
-                    }
-                }
-            .onAppear {
-                let container = modelContext.container
-           
-                
-                Task.detached {
-                    let backgroundActor = MovieModel.BackgroundActor(modelContainer: container)
-                    let backgroundActor2 = TVShowModel.BackgroundActor(modelContainer: container)
-                    let backgroundActor3 = PersonModel.BackgroundActor(modelContainer: container)
-                    
-                    await print(movies.count)
-                    
-                    do {
-                        try await backgroundActor.importMovies()
-                        try await backgroundActor2.importTVShows()
-                        try await backgroundActor3.importPeople()
-                    } catch {
-                        print("Error importing movies: \(error)")
-                    }
-                }
-                
-            }
-
-            .toolbar {
-                Button("", systemImage: "movieclapper") {
-                    let container = modelContext.container
-                    
-                    Task.detached {
-                        let backgroundActor = MovieModel.BackgroundActor(modelContainer: container)
-                        await print(movies.count)
-                        
-                        do {
-                            try await backgroundActor.importMovies()
-                        } catch {
-                            print("Error importing movies: \(error)")
-                        }
-                    }
-                }
-
-                Button("", systemImage: "tv"){
-                    let container = modelContext.container
-                    
-                    Task.detached {
-                        let backgroundActor = TVShowModel.BackgroundActor(modelContainer: container)
-                        do {
-                            try await backgroundActor.importTVShows()
-                        } catch {
-                            print("Error importing popular people: \(error)")
-                        }
-                    }
-                }
-                
-                Button("", systemImage: "person"){
-                    let container = modelContext.container
-                    
-                    Task.detached {
-                        let backgroundActor = PersonModel.BackgroundActor(modelContainer: container)
-                        do {
-                            try await backgroundActor.importPeople()
-                        } catch {
-                            print("Error importing popular people: \(error)")
-                        }
-                    }
-                }
-                
-                Button("", systemImage: "minus.circle.fill") {
-                    for movie in movies {
-                        modelContext.delete(movie)
-                        
-                    }
-                    for person in people {
-                        modelContext.delete(person)
-                    }
-                    for tvShow in tvShows {
-                        modelContext.delete(tvShow)
-                    }
-                }
-                
-
-
-            }
+    @Query var movies: [MovieModel]
+    
+    private var sortedMoviesByName: [MovieModel] {
+        movies.sorted { movie1, movie2 in
+            orderAscending ? movie1.title < movie2.title : movie1.title > movie2.title
         }
     }
+    
+    @Query var people: [PersonModel]
+    
+    private var sortedPeopleByName: [PersonModel] {
+        people.sorted { person1, person2 in
+            orderAscending ? person1.name < person2.name : person1.name > person2.name
+        }
+    }
+    @Query var tvShows: [TVShowModel]
+    
+    private var sortedTVShowsByName: [TVShowModel] {
+        tvShows.sorted { tvShow1, tvShow2 in
+            orderAscending ? tvShow1.name < tvShow2.name : tvShow1.name > tvShow2.name
+        }
+    }
+
+    var body: some View {
+        NavigationStack {
+            List {
+                Section("Popular Movies") {
+                    ScrollView(.horizontal) {
+                        HStack {
+                            ForEach(sortedMoviesByName) { movie in
+                                NavigationLink(value: movie) {
+                                    MoviesCellView(movie: movie)
+                                }
+                            }
+                        }
+                    }
+                }
+
+                Section("Popular People") {
+                    ScrollView(.horizontal) {
+                        HStack {
+                            ForEach(sortedPeopleByName) { person in
+                                NavigationLink(value: person){
+                                    PeopleCellView(person: person)
+                                }
+                            }
+                        }
+                    }
+                }
+
+                Section("Popular TV Shows") {
+                    ScrollView(.horizontal) {
+                        HStack {
+                            ForEach(sortedTVShowsByName) { tvShow in
+                                NavigationLink(value: tvShow){
+                                    TVShowsCellView(tvShow: tvShow)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            
+
+            .navigationDestination(for: MovieModel.self, destination: { movie in
+                MoviesDetailView(movie: movie)
+            })
+            .navigationDestination(for: TVShowModel.self, destination: { tvShow in
+                TVShowsDetailView(tvShow: tvShow)
+            })
+            .navigationDestination(for: PersonModel.self, destination: { person in
+                PersonDetailView(person: person)
+            })
+            
+            .toolbar {
+                ToolbarItemGroup {
+                    Button(action: {
+                        Task {
+                            await viewModel.importMovies()
+                        }
+                    }) {
+                        Label("Import Movies", systemImage: "movieclapper")
+                    }
+
+                    Button(action: {
+                        Task {
+                            await viewModel.importTVShows()
+                        }
+                    }) {
+                        Label("Import TV Shows", systemImage: "tv")
+                    }
+
+                    Button(action: {
+                        Task {
+                            await viewModel.importPeople()
+                        }
+                    }) {
+                        Label("Import People", systemImage: "person")
+                    }
+
+                    Button(action: {
+                        for movie in movies {
+                            modelContext.delete(movie)
+                            try! modelContext.save()
+                        }
+                        for person in people {
+                            modelContext.delete(person)
+                        }
+                        for tvShow in tvShows {
+                            modelContext.delete(tvShow)
+                        }
+                    }) {
+                        Label("Delete All", systemImage: "minus.circle.fill")
+                    }
+                }
+            }
+        }
+        
+    }
+    
 }
 
-#Preview {
-    HomeView().modelContainer(for: [MovieModel.self, PersonModel.self, TVShowModel.self])
-}
+
+
+//#Preview {
+//    HomeView()
+//        .modelContainer(MovieModel.preview)
+//
+//}
+
