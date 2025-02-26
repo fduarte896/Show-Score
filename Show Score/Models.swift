@@ -56,7 +56,8 @@ class PopularMoviesResponseModelDecode : Codable {
 // Modelo para cada película individual
 @Model
 class MovieModel {
-    @Attribute(.unique) var id: Int
+//    @Attribute(.unique)
+    var id: Int
     var title: String
     var originalTitle: String
     var overview: String
@@ -216,7 +217,7 @@ extension MovieModel {
             
             for movie in moviesWithOutImages {
                 guard let url = movie.urlToGetMovieImage else {    break   }
-                print("Downloading movie Image: ", movie.posterPath)
+//                print("Downloading movie Image: ", movie.posterPath)
                 do {
                     let (data, _) = try await URLSession.shared.getData1(for: url)
                     movie.posterImage = data
@@ -293,28 +294,42 @@ extension MovieModel {
                 let (data, _) = try await URLSession.shared.getData2(for: request) //Traemos el JSON de la URLSession, el ´get data´ viene custom en una extensión porque necesitamos que el argumento sea sendable.
                 
     //            print(String(decoding: data, as: UTF8.self))
-                let movies = try JSONDecoder().decode(Movies.self, from: data) ///Decodificamos el JSON en structs
+                let movies = try JSONDecoder().decode(Movies.self, from: data)
 
                 //Finalmente hacemos un loop por el array de structs que llegan de la llamada para insertarlos como modelos de SwiftData.
+                
+//                var insertedMoviesIDs : Set<Int> = []
+                
                 for movie in movies.results {
-                    let movieModel = MovieModel(
-                        id: movie.id,
-                        title: movie.title,
-                        originalTitle: movie.originalTitle,
-                        overview: movie.overview,
-                        popularity: movie.popularity,
-                        posterPath: movie.posterPath,
-                        backdropPath: movie.backdropPath,
-                        releaseDate: movie.releaseDate,
-                        voteAverage: movie.voteAverage,
-                        voteCount: movie.voteCount,
-                        genreIDs: movie.genreIDs,
-                        adult: movie.adult,
-                        video: movie.video
-                    )
-                    print("Importing movie: ", movie.originalTitle)
-                    modelContext.insert(movieModel) ///Insertamos el modelo dentro del contexto
-//                    print(movieModel.title)
+                    
+                    let existingMovies = try modelContext.fetch(FetchDescriptor<MovieModel>())
+                    let existingMoviesIDs = Set(existingMovies.map{ $0.id })
+                    
+                    if !existingMoviesIDs.contains(movie.id) {
+                        let movieModel = MovieModel(
+                            id: movie.id,
+                            title: movie.title,
+                            originalTitle: movie.originalTitle,
+                            overview: movie.overview,
+                            popularity: movie.popularity,
+                            posterPath: movie.posterPath,
+                            backdropPath: movie.backdropPath,
+                            releaseDate: movie.releaseDate,
+                            voteAverage: movie.voteAverage,
+                            voteCount: movie.voteCount,
+                            genreIDs: movie.genreIDs,
+                            adult: movie.adult,
+                            video: movie.video
+                            )
+                        modelContext.insert(movieModel)
+                    }
+
+                    
+//                    print("Importando película: ", movie.originalTitle)
+//                    modelContext.insert(movieModel) // Insertamos el modelo dentro del contexto
+                    
+                    //Insertamos el ID al conjunto de películas que ya fueron insertadas.
+//                    insertedMoviesIDs.insert(movie.id)
                 }
                 try modelContext.save()
                 await downloadMovieImages()
@@ -477,7 +492,8 @@ class TVShowsResponseModelCodable: Codable {
 @Model
 class TVShowModel {
     
-    @Attribute(.unique) var id: Int
+//    @Attribute(.unique)
+    var id: Int
     var adult: Bool
     var backdropPath: String?
     var genreIDs: [Int]
@@ -690,26 +706,26 @@ extension TVShowModel {
                 let tvShows = try JSONDecoder().decode(TVShows.self, from: data)
                 
                 for tvShow in tvShows.results {
+
+                        let tvShowModel = TVShowModel(
+                            id: tvShow.id,
+                            adult: tvShow.adult,
+                            backdropPath: tvShow.backdropPath,
+                            genreIDs: tvShow.genreIDs,
+                            originCountry: tvShow.originCountry,
+                            originalLanguage: tvShow.originalLanguage,
+                            originalName: tvShow.originalName,
+                            overview: tvShow.overview,
+                            popularity: tvShow.popularity,
+                            posterPath: tvShow.posterPath,
+                            firstAirDate: tvShow.firstAirDate,
+                            name: tvShow.name,
+                            voteAverage: tvShow.voteAverage,
+                            voteCount: tvShow.voteCount
+                        )
+                        print("Importing TVShow: ", tvShowModel.name)
+                        modelContext.insert(tvShowModel)
                     
-                    let tvShowModel = TVShowModel(
-                        id: tvShow.id,
-                        adult: tvShow.adult,
-                        backdropPath: tvShow.backdropPath,
-                        genreIDs: tvShow.genreIDs,
-                        originCountry: tvShow.originCountry,
-                        originalLanguage: tvShow.originalLanguage,
-                        originalName: tvShow.originalName,
-                        overview: tvShow.overview,
-                        popularity: tvShow.popularity,
-                        posterPath: tvShow.posterPath,
-                        firstAirDate: tvShow.firstAirDate,
-                        name: tvShow.name,
-                        voteAverage: tvShow.voteAverage,
-                        voteCount: tvShow.voteCount
-                    )
-                    
-                    print("Importing TVShow: ", tvShowModel.name)
-                    modelContext.insert(tvShowModel)
                 }
                 try modelContext.save()
                 await downloadTVShowImages()

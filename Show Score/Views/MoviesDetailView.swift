@@ -13,6 +13,7 @@ struct MoviesDetailView: View {
     var viewmodel : HomeViewModel?
     
     var body: some View {
+        Text(String(movie.id))
         Text(movie.title).font(.title)
         Image(uiImage: movie.viewImage)
             .resizable()

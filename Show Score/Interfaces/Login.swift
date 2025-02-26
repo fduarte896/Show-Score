@@ -102,44 +102,7 @@ func createSessionId(token: String) async -> String? {
     }
 }
 
-//func getFavouriteMovies(sessionId: String, modelContext: ModelContext) async -> Result<[MovieModelDecode], Error> {
-//    
-//    let url = URL(string: "https://api.themoviedb.org/3/account/531b2642836ff7286a0e1686c43e8512f554cf01/favorite/movies")!
-//    var components = URLComponents(url: url, resolvingAgainstBaseURL: true)!
-//    let queryItems: [URLQueryItem] = [
-//      URLQueryItem(name: "language", value: "en-US"),
-//      URLQueryItem(name: "page", value: "1"),
-//      URLQueryItem(name: "sort_by", value: "created_at.asc"),
-//    ]
-//    components.queryItems = components.queryItems.map { $0 + queryItems } ?? queryItems
-//
-//    var request = URLRequest(url: components.url!)
-//    request.httpMethod = "GET"
-//    request.timeoutInterval = 10
-//    request.allHTTPHeaderFields = [
-//      "accept": "application/json",
-//      "Authorization": "Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI5Y2ZjYmE2N2NmNDQzNzU3OGNmN2EwY2ZhNjU1ODI0YyIsIm5iZiI6MTY5OTg3OTg3MS4zMDcwMDAyLCJzdWIiOiI2NTUyMWJiZmZkNmZhMTAwYWI5NzFkMmYiLCJzY29wZXMiOlsiYXBpX3JlYWQiXSwidmVyc2lvbiI6MX0.peObVLgL6LnNpfdnr6VPK99q_Lvxm7U2DVr1VTt8z4w"
-//    ]
-//
-//    do{
-//        let (data, _) = try await URLSession.shared.data(for: request)
-//        let decoder = JSONDecoder()
-////        decoder.keyDecodingStrategy = .convertFromSnakeCase
-//        let moviesResponse = try decoder.decode(PopularMoviesResponseModelDecode.self, from: data)
-//        print("Movie response exitosa")
-//        for movieDecode in moviesResponse.results {
-//            let movie = movieDecode.toMovieModel()
-//            modelContext.insert(movie)
-//        }
-//        try modelContext.save()
-//        print("Peliculas favoritas guardadas correctamente en SwiftData.")
-//        return .success(moviesResponse.results)
-//        
-//    } catch {
-//        print("Error getting fav movies: ")
-//        return .failure(error)
-//    }
-//}
+
 
 func getFavouriteMovies(sessionId: String, modelContext: ModelContext) async {
     let url = URL(string: "https://api.themoviedb.org/3/account/\(sessionId)/favorite/movies")!
@@ -175,12 +138,19 @@ func getFavouriteMovies(sessionId: String, modelContext: ModelContext) async {
 //        decoder.keyDecodingStrategy = .convertFromSnakeCase
 
         let moviesResponse = try decoder.decode(PopularMoviesResponseModelDecode.self, from: data)
-        print(moviesResponse.results)
+//        print(moviesResponse.results)
         for movieDecode in moviesResponse.results {
-            let movie = movieDecode.toMovieModel()
-            modelContext.insert(movie)
-            let favoriteMovie = FavoriteMovieModel(movie: movie)
-            modelContext.insert(favoriteMovie)
+            let existingMovie = try? modelContext.fetch(FetchDescriptor<MovieModel>(predicate: #Predicate { $0.id == movieDecode.id })).first
+            if let existingMovie = existingMovie {
+                let favoriteMovie = FavoriteMovieModel(movie: existingMovie)
+                modelContext.insert(favoriteMovie)
+            } else {
+                let newMovie = movieDecode.toMovieModel()
+                modelContext.insert(newMovie)
+                let favoriteMovie = FavoriteMovieModel(movie: newMovie)
+                modelContext.insert(favoriteMovie)
+            }
+        
         }
 
         try modelContext.save()
