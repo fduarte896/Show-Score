@@ -71,7 +71,7 @@ class MovieModel {
     var genreIDs: [Int]
     var adult: Bool
     var video: Bool
-    
+    var isPopular : Bool
     
     var urlToGetMovieImage : URL? {
         let urlBase = "https://image.tmdb.org/t/p/w500"
@@ -92,7 +92,7 @@ class MovieModel {
         case video
     }
     
-    init(id: Int, title: String, originalTitle: String, overview: String, popularity: Double, posterPath: String, posterImage: Data? = nil, backdropPath: String, releaseDate: String, voteAverage: Double, voteCount: Int, genreIDs: [Int], adult: Bool, video: Bool) {
+    init(id: Int, title: String, originalTitle: String, overview: String, popularity: Double, posterPath: String, posterImage: Data? = nil, backdropPath: String, releaseDate: String, voteAverage: Double, voteCount: Int, genreIDs: [Int], adult: Bool, video: Bool, isPopular: Bool) {
         self.id = id
         self.title = title
         self.originalTitle = originalTitle
@@ -107,7 +107,7 @@ class MovieModel {
         self.adult = adult
         self.video = video
         self.posterImage = posterImage
-        
+        self.isPopular = isPopular
     }
 }
 
@@ -319,17 +319,12 @@ extension MovieModel {
                             voteCount: movie.voteCount,
                             genreIDs: movie.genreIDs,
                             adult: movie.adult,
-                            video: movie.video
+                            video: movie.video,
+                            isPopular: true
                             )
                         modelContext.insert(movieModel)
                     }
 
-                    
-//                    print("Importando película: ", movie.originalTitle)
-//                    modelContext.insert(movieModel) // Insertamos el modelo dentro del contexto
-                    
-                    //Insertamos el ID al conjunto de películas que ya fueron insertadas.
-//                    insertedMoviesIDs.insert(movie.id)
                 }
                 try modelContext.save()
                 await downloadMovieImages()
@@ -349,16 +344,16 @@ extension MovieModel {
         
         // Crear un array de películas de ejemplo
         let sampleMovies = [
-            MovieModel(id: 1, title: "Inception Preview", originalTitle: "Inception", overview: "A thief who steals corporate secrets through the use of dream-sharing technology.", popularity: 82.3, posterPath: "https://image.tmdb.org/t/p/w500/qmDpIHrmpJINaRKAfWQfftjCdyi.jpg", backdropPath: "https://image.tmdb.org/t/p/w500/s3TBrRGB1iav7gFOCNx3H31MoES.jpg", releaseDate: "2010-07-16", voteAverage: 8.3, voteCount: 22187, genreIDs: [28, 12, 878], adult: false, video: false),
-            MovieModel(id: 2, title: "Interstellar Preview", originalTitle: "Interstellar", overview: "A team of explorers travel through a wormhole in space.", popularity: 75.5, posterPath: "https://image.tmdb.org/t/p/w500/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg", backdropPath: "https://image.tmdb.org/t/p/w500/rAiYTfKGqDCRIIqo664sY9XZIvQ.jpg", releaseDate: "2014-11-07", voteAverage: 8.6, voteCount: 19123, genreIDs: [12, 18, 878], adult: false, video: false),
-            MovieModel(id: 3, title: "The Dark Knight Preview", originalTitle: "The Dark Knight", overview: "Batman sets out to dismantle the remaining criminal organizations that plague the streets.", popularity: 85.1, posterPath: "https://image.tmdb.org/t/p/w500/qJ2tW6WMUDux911r6m7haRef0WH.jpg", backdropPath: "https://image.tmdb.org/t/p/w500/hbU0NzUlcjeJYvrqJjBXunAO3nx.jpg", releaseDate: "2008-07-18", voteAverage: 9.0, voteCount: 25192, genreIDs: [28, 80, 18], adult: false, video: false),
-            MovieModel(id: 4, title: "Pulp Fiction Preview", originalTitle: "Pulp Fiction", overview: "The lives of two mob hitmen, a boxer, and others intertwine in four tales of violence and redemption.", popularity: 69.7, posterPath: "https://image.tmdb.org/t/p/w500/tlxFSN8Q6oV1b6Ko3vR3s3rJMNQ.jpg", backdropPath: "https://image.tmdb.org/t/p/w500/8kSerJrhrJWKLk1LViesGcnrUPE.jpg", releaseDate: "1994-10-14", voteAverage: 8.9, voteCount: 23211, genreIDs: [80, 18], adult: false, video: false),
-            MovieModel(id: 5, title: "The Matrix Preview", originalTitle: "The Matrix", overview: "A computer hacker learns about the true nature of reality and his role in the war against its controllers.", popularity: 79.4, posterPath: "https://image.tmdb.org/t/p/w500/f89U3ADr1oiB1s9GkdPOEpXUk5H.jpg", backdropPath: "https://image.tmdb.org/t/p/w500/9fgcUOC2epVrNnVnOFXMlZmG3CQ.jpg", releaseDate: "1999-03-31", voteAverage: 8.7, voteCount: 19052, genreIDs: [28, 878], adult: false, video: false),
-            MovieModel(id: 6, title: "Fight Club Preview", originalTitle: "Fight Club", overview: "An insomniac office worker forms an underground fight club.", popularity: 72.8, posterPath: "https://image.tmdb.org/t/p/w500/pB8BM7pdSp6B6Ih7QZ4DrQ3PmJK.jpg", backdropPath: "https://image.tmdb.org/t/p/w500/nqzTOePp7WgKAZi7h1VQ7zqj9yY.jpg", releaseDate: "1999-10-15", voteAverage: 8.8, voteCount: 19501, genreIDs: [18], adult: false, video: false),
-            MovieModel(id: 7, title: "Forrest Gump Preview", originalTitle: "Forrest Gump", overview: "The presidencies of Kennedy and Johnson and events of the 20th century unfold from the perspective of a man with an IQ of 75.", popularity: 78.2, posterPath: "https://image.tmdb.org/t/p/w500/h5J4W4veyxMXDMjeNxZI46TsHOb.jpg", backdropPath: "https://image.tmdb.org/t/p/w500/s5zKfPsuLz3sxvPrGVB0Bg5W9oK.jpg", releaseDate: "1994-07-06", voteAverage: 8.8, voteCount: 21115, genreIDs: [18, 35, 10749], adult: false, video: false),
-            MovieModel(id: 8, title: "The Godfather Preview", originalTitle: "The Godfather", overview: "The aging patriarch of an organized crime dynasty transfers control of his clandestine empire to his reluctant son.", popularity: 81.4, posterPath: "https://image.tmdb.org/t/p/w500/3bhkrj58Vtu7enYsRolD1fZdja1.jpg", backdropPath: "https://image.tmdb.org/t/p/w500/rSPw7tgCH9c6NqICZef4kZjFOQ5.jpg", releaseDate: "1972-03-14", voteAverage: 9.2, voteCount: 18452, genreIDs: [80, 18], adult: false, video: false),
-            MovieModel(id: 9, title: "The Shawshank Redemption Preview", originalTitle: "The Shawshank Redemption", overview: "Two imprisoned men bond over a number of years.", popularity: 83.5, posterPath: "https://image.tmdb.org/t/p/w500/q6y0Go1tsGEsmtFryDOJo3dEmqu.jpg", backdropPath: "https://image.tmdb.org/t/p/w500/iNh3BivHyg5sQRPP1KOkzguEX0H.jpg", releaseDate: "1994-09-22", voteAverage: 9.3, voteCount: 21175, genreIDs: [18, 80], adult: false, video: false),
-            MovieModel(id: 10, title: "Gladiator Preview", originalTitle: "Gladiator", overview: "A former Roman General sets out to exact vengeance against the corrupt emperor.", popularity: 77.2, posterPath: "https://image.tmdb.org/t/p/w500/jf9M1IIMRY3INyA0E7z9GmkB5yu.jpg", backdropPath: "https://image.tmdb.org/t/p/w500/vE4gXAFhzy1AAcsfSXBFGHV1EK2.jpg", releaseDate: "2000-05-01", voteAverage: 8.5, voteCount: 19023, genreIDs: [28, 18, 12], adult: false, video: false)
+            MovieModel(id: 1, title: "Inception Preview", originalTitle: "Inception", overview: "A thief who steals corporate secrets through the use of dream-sharing technology.", popularity: 82.3, posterPath: "https://image.tmdb.org/t/p/w500/qmDpIHrmpJINaRKAfWQfftjCdyi.jpg", backdropPath: "https://image.tmdb.org/t/p/w500/s3TBrRGB1iav7gFOCNx3H31MoES.jpg", releaseDate: "2010-07-16", voteAverage: 8.3, voteCount: 22187, genreIDs: [28, 12, 878], adult: false, video: false, isPopular: false),
+            MovieModel(id: 2, title: "Interstellar Preview", originalTitle: "Interstellar", overview: "A team of explorers travel through a wormhole in space.", popularity: 75.5, posterPath: "https://image.tmdb.org/t/p/w500/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg", backdropPath: "https://image.tmdb.org/t/p/w500/rAiYTfKGqDCRIIqo664sY9XZIvQ.jpg", releaseDate: "2014-11-07", voteAverage: 8.6, voteCount: 19123, genreIDs: [12, 18, 878], adult: false, video: false, isPopular: false),
+            MovieModel(id: 3, title: "The Dark Knight Preview", originalTitle: "The Dark Knight", overview: "Batman sets out to dismantle the remaining criminal organizations that plague the streets.", popularity: 85.1, posterPath: "https://image.tmdb.org/t/p/w500/qJ2tW6WMUDux911r6m7haRef0WH.jpg", backdropPath: "https://image.tmdb.org/t/p/w500/hbU0NzUlcjeJYvrqJjBXunAO3nx.jpg", releaseDate: "2008-07-18", voteAverage: 9.0, voteCount: 25192, genreIDs: [28, 80, 18], adult: false, video: false, isPopular: false),
+            MovieModel(id: 4, title: "Pulp Fiction Preview", originalTitle: "Pulp Fiction", overview: "The lives of two mob hitmen, a boxer, and others intertwine in four tales of violence and redemption.", popularity: 69.7, posterPath: "https://image.tmdb.org/t/p/w500/tlxFSN8Q6oV1b6Ko3vR3s3rJMNQ.jpg", backdropPath: "https://image.tmdb.org/t/p/w500/8kSerJrhrJWKLk1LViesGcnrUPE.jpg", releaseDate: "1994-10-14", voteAverage: 8.9, voteCount: 23211, genreIDs: [80, 18], adult: false, video: false, isPopular: false),
+            MovieModel(id: 5, title: "The Matrix Preview", originalTitle: "The Matrix", overview: "A computer hacker learns about the true nature of reality and his role in the war against its controllers.", popularity: 79.4, posterPath: "https://image.tmdb.org/t/p/w500/f89U3ADr1oiB1s9GkdPOEpXUk5H.jpg", backdropPath: "https://image.tmdb.org/t/p/w500/9fgcUOC2epVrNnVnOFXMlZmG3CQ.jpg", releaseDate: "1999-03-31", voteAverage: 8.7, voteCount: 19052, genreIDs: [28, 878], adult: false, video: false, isPopular: false),
+            MovieModel(id: 6, title: "Fight Club Preview", originalTitle: "Fight Club", overview: "An insomniac office worker forms an underground fight club.", popularity: 72.8, posterPath: "https://image.tmdb.org/t/p/w500/pB8BM7pdSp6B6Ih7QZ4DrQ3PmJK.jpg", backdropPath: "https://image.tmdb.org/t/p/w500/nqzTOePp7WgKAZi7h1VQ7zqj9yY.jpg", releaseDate: "1999-10-15", voteAverage: 8.8, voteCount: 19501, genreIDs: [18], adult: false, video: false, isPopular: false),
+            MovieModel(id: 7, title: "Forrest Gump Preview", originalTitle: "Forrest Gump", overview: "The presidencies of Kennedy and Johnson and events of the 20th century unfold from the perspective of a man with an IQ of 75.", popularity: 78.2, posterPath: "https://image.tmdb.org/t/p/w500/h5J4W4veyxMXDMjeNxZI46TsHOb.jpg", backdropPath: "https://image.tmdb.org/t/p/w500/s5zKfPsuLz3sxvPrGVB0Bg5W9oK.jpg", releaseDate: "1994-07-06", voteAverage: 8.8, voteCount: 21115, genreIDs: [18, 35, 10749], adult: false, video: false, isPopular: false),
+            MovieModel(id: 8, title: "The Godfather Preview", originalTitle: "The Godfather", overview: "The aging patriarch of an organized crime dynasty transfers control of his clandestine empire to his reluctant son.", popularity: 81.4, posterPath: "https://image.tmdb.org/t/p/w500/3bhkrj58Vtu7enYsRolD1fZdja1.jpg", backdropPath: "https://image.tmdb.org/t/p/w500/rSPw7tgCH9c6NqICZef4kZjFOQ5.jpg", releaseDate: "1972-03-14", voteAverage: 9.2, voteCount: 18452, genreIDs: [80, 18], adult: false, video: false, isPopular: false),
+            MovieModel(id: 9, title: "The Shawshank Redemption Preview", originalTitle: "The Shawshank Redemption", overview: "Two imprisoned men bond over a number of years.", popularity: 83.5, posterPath: "https://image.tmdb.org/t/p/w500/q6y0Go1tsGEsmtFryDOJo3dEmqu.jpg", backdropPath: "https://image.tmdb.org/t/p/w500/iNh3BivHyg5sQRPP1KOkzguEX0H.jpg", releaseDate: "1994-09-22", voteAverage: 9.3, voteCount: 21175, genreIDs: [18, 80], adult: false, video: false, isPopular: false),
+            MovieModel(id: 10, title: "Gladiator Preview", originalTitle: "Gladiator", overview: "A former Roman General sets out to exact vengeance against the corrupt emperor.", popularity: 77.2, posterPath: "https://image.tmdb.org/t/p/w500/jf9M1IIMRY3INyA0E7z9GmkB5yu.jpg", backdropPath: "https://image.tmdb.org/t/p/w500/vE4gXAFhzy1AAcsfSXBFGHV1EK2.jpg", releaseDate: "2000-05-01", voteAverage: 8.5, voteCount: 19023, genreIDs: [28, 18, 12], adult: false, video: false, isPopular: false)
             
             
         ]
@@ -375,16 +370,16 @@ extension MovieModel {
 //        }
 
         let sampleTVShows = [
-            TVShowModel(id: 1, adult: false, backdropPath: "/backdrop1.jpg", genreIDs: [18, 10765], originCountry: ["US"], originalLanguage: "en", originalName: "Stranger Things", overview: "A group of kids uncovers mysterious events in their small town.", popularity: 85.6, posterPath: "/poster1.jpg", firstAirDate: "2016-07-15", name: "Stranger Things", voteAverage: 8.7, voteCount: 15000),
-            TVShowModel(id: 2, adult: false, backdropPath: "/backdrop2.jpg", genreIDs: [18, 10759], originCountry: ["US"], originalLanguage: "en", originalName: "Breaking Bad", overview: "A high school teacher turned meth producer.", popularity: 92.3, posterPath: "/poster2.jpg", firstAirDate: "2008-01-20", name: "Breaking Bad", voteAverage: 9.5, voteCount: 22000),
-            TVShowModel(id: 3, adult: false, backdropPath: "/backdrop3.jpg", genreIDs: [18, 10765, 9648], originCountry: ["US"], originalLanguage: "en", originalName: "The X-Files", overview: "FBI agents investigate paranormal phenomena.", popularity: 78.2, posterPath: "/poster3.jpg", firstAirDate: "1993-09-10", name: "The X-Files", voteAverage: 8.6, voteCount: 13000),
-            TVShowModel(id: 4, adult: false, backdropPath: "/backdrop4.jpg", genreIDs: [10759, 18, 10768], originCountry: ["US"], originalLanguage: "en", originalName: "24", overview: "Agent Jack Bauer prevents terrorist threats.", popularity: 75.1, posterPath: "/poster4.jpg", firstAirDate: "2001-11-06", name: "24", voteAverage: 8.4, voteCount: 9000),
-            TVShowModel(id: 5, adult: false, backdropPath: "/backdrop5.jpg", genreIDs: [35, 18], originCountry: ["US"], originalLanguage: "en", originalName: "Friends", overview: "Six friends navigate life in New York City.", popularity: 98.5, posterPath: "/poster5.jpg", firstAirDate: "1994-09-22", name: "Friends", voteAverage: 8.9, voteCount: 19000),
-            TVShowModel(id: 6, adult: false, backdropPath: "/backdrop6.jpg", genreIDs: [18, 10765], originCountry: ["US"], originalLanguage: "en", originalName: "The Mandalorian", overview: "A bounty hunter explores the galaxy.", popularity: 89.4, posterPath: "/poster6.jpg", firstAirDate: "2019-11-12", name: "The Mandalorian", voteAverage: 8.8, voteCount: 20000),
-            TVShowModel(id: 7, adult: false, backdropPath: "/backdrop7.jpg", genreIDs: [16, 10765], originCountry: ["JP"], originalLanguage: "ja", originalName: "Attack on Titan", overview: "Humans fight against man-eating giants.", popularity: 95.0, posterPath: "/poster7.jpg", firstAirDate: "2013-04-07", name: "Attack on Titan", voteAverage: 9.0, voteCount: 25000),
-            TVShowModel(id: 8, adult: false, backdropPath: "/backdrop8.jpg", genreIDs: [18, 9648], originCountry: ["US"], originalLanguage: "en", originalName: "Twin Peaks", overview: "FBI investigates a young woman's murder.", popularity: 70.3, posterPath: "/poster8.jpg", firstAirDate: "1990-04-08", name: "Twin Peaks", voteAverage: 8.5, voteCount: 8000),
-            TVShowModel(id: 9, adult: false, backdropPath: "/backdrop9.jpg", genreIDs: [16, 10759], originCountry: ["JP"], originalLanguage: "ja", originalName: "Naruto", overview: "A young ninja dreams of becoming Hokage.", popularity: 88.7, posterPath: "/poster9.jpg", firstAirDate: "2002-10-03", name: "Naruto", voteAverage: 8.6, voteCount: 21000),
-            TVShowModel(id: 10, adult: false, backdropPath: "/backdrop10.jpg", genreIDs: [18, 35], originCountry: ["US"], originalLanguage: "en", originalName: "The Office", overview: "A mockumentary on office life.", popularity: 82.9, posterPath: "/poster10.jpg", firstAirDate: "2005-03-24", name: "The Office", voteAverage: 8.9, voteCount: 19000)
+            TVShowModel(id: 1, adult: false, backdropPath: "/backdrop1.jpg", genreIDs: [18, 10765], originCountry: ["US"], originalLanguage: "en", originalName: "Stranger Things", overview: "A group of kids uncovers mysterious events in their small town.", popularity: 85.6, posterPath: "/poster1.jpg", firstAirDate: "2016-07-15", name: "Stranger Things", voteAverage: 8.7, voteCount: 15000, isPopular: false),
+            TVShowModel(id: 2, adult: false, backdropPath: "/backdrop2.jpg", genreIDs: [18, 10759], originCountry: ["US"], originalLanguage: "en", originalName: "Breaking Bad", overview: "A high school teacher turned meth producer.", popularity: 92.3, posterPath: "/poster2.jpg", firstAirDate: "2008-01-20", name: "Breaking Bad", voteAverage: 9.5, voteCount: 22000, isPopular: false),
+            TVShowModel(id: 3, adult: false, backdropPath: "/backdrop3.jpg", genreIDs: [18, 10765, 9648], originCountry: ["US"], originalLanguage: "en", originalName: "The X-Files", overview: "FBI agents investigate paranormal phenomena.", popularity: 78.2, posterPath: "/poster3.jpg", firstAirDate: "1993-09-10", name: "The X-Files", voteAverage: 8.6, voteCount: 13000, isPopular: false),
+            TVShowModel(id: 4, adult: false, backdropPath: "/backdrop4.jpg", genreIDs: [10759, 18, 10768], originCountry: ["US"], originalLanguage: "en", originalName: "24", overview: "Agent Jack Bauer prevents terrorist threats.", popularity: 75.1, posterPath: "/poster4.jpg", firstAirDate: "2001-11-06", name: "24", voteAverage: 8.4, voteCount: 9000, isPopular: false),
+            TVShowModel(id: 5, adult: false, backdropPath: "/backdrop5.jpg", genreIDs: [35, 18], originCountry: ["US"], originalLanguage: "en", originalName: "Friends", overview: "Six friends navigate life in New York City.", popularity: 98.5, posterPath: "/poster5.jpg", firstAirDate: "1994-09-22", name: "Friends", voteAverage: 8.9, voteCount: 19000, isPopular: false),
+            TVShowModel(id: 6, adult: false, backdropPath: "/backdrop6.jpg", genreIDs: [18, 10765], originCountry: ["US"], originalLanguage: "en", originalName: "The Mandalorian", overview: "A bounty hunter explores the galaxy.", popularity: 89.4, posterPath: "/poster6.jpg", firstAirDate: "2019-11-12", name: "The Mandalorian", voteAverage: 8.8, voteCount: 20000, isPopular: false),
+            TVShowModel(id: 7, adult: false, backdropPath: "/backdrop7.jpg", genreIDs: [16, 10765], originCountry: ["JP"], originalLanguage: "ja", originalName: "Attack on Titan", overview: "Humans fight against man-eating giants.", popularity: 95.0, posterPath: "/poster7.jpg", firstAirDate: "2013-04-07", name: "Attack on Titan", voteAverage: 9.0, voteCount: 25000, isPopular: false),
+            TVShowModel(id: 8, adult: false, backdropPath: "/backdrop8.jpg", genreIDs: [18, 9648], originCountry: ["US"], originalLanguage: "en", originalName: "Twin Peaks", overview: "FBI investigates a young woman's murder.", popularity: 70.3, posterPath: "/poster8.jpg", firstAirDate: "1990-04-08", name: "Twin Peaks", voteAverage: 8.5, voteCount: 8000, isPopular: false),
+            TVShowModel(id: 9, adult: false, backdropPath: "/backdrop9.jpg", genreIDs: [16, 10759], originCountry: ["JP"], originalLanguage: "ja", originalName: "Naruto", overview: "A young ninja dreams of becoming Hokage.", popularity: 88.7, posterPath: "/poster9.jpg", firstAirDate: "2002-10-03", name: "Naruto", voteAverage: 8.6, voteCount: 21000, isPopular: false),
+            TVShowModel(id: 10, adult: false, backdropPath: "/backdrop10.jpg", genreIDs: [18, 35], originCountry: ["US"], originalLanguage: "en", originalName: "The Office", overview: "A mockumentary on office life.", popularity: 82.9, posterPath: "/poster10.jpg", firstAirDate: "2005-03-24", name: "The Office", voteAverage: 8.9, voteCount: 19000, isPopular: false)
         ]
         
         for tvShow in sampleTVShows {
@@ -429,7 +424,8 @@ extension MovieModelDecode {
             voteCount: self.voteCount,
             genreIDs: self.genreIDs,
             adult: self.adult,
-            video: self.video
+            video: self.video,
+            isPopular: false
         )
     }
 }
@@ -508,6 +504,7 @@ class TVShowModel {
     var name: String
     var voteAverage: Double
     var voteCount: Int
+    var isPopular : Bool
     
     var urlToGetTVShowImage: URL? {
         let urlBase = "https://image.tmdb.org/t/p/w500"
@@ -547,7 +544,8 @@ class TVShowModel {
         firstAirDate: String,
         name: String,
         voteAverage: Double,
-        voteCount: Int
+        voteCount: Int,
+        isPopular: Bool
     ) {
         self.id = id
         self.adult = adult
@@ -563,6 +561,7 @@ class TVShowModel {
         self.name = name
         self.voteAverage = voteAverage
         self.voteCount = voteCount
+        self.isPopular = isPopular
     }
 }
 
@@ -707,24 +706,30 @@ extension TVShowModel {
                 
                 for tvShow in tvShows.results {
 
-                        let tvShowModel = TVShowModel(
-                            id: tvShow.id,
-                            adult: tvShow.adult,
-                            backdropPath: tvShow.backdropPath,
-                            genreIDs: tvShow.genreIDs,
-                            originCountry: tvShow.originCountry,
-                            originalLanguage: tvShow.originalLanguage,
-                            originalName: tvShow.originalName,
-                            overview: tvShow.overview,
-                            popularity: tvShow.popularity,
-                            posterPath: tvShow.posterPath,
-                            firstAirDate: tvShow.firstAirDate,
-                            name: tvShow.name,
-                            voteAverage: tvShow.voteAverage,
-                            voteCount: tvShow.voteCount
-                        )
-                        print("Importing TVShow: ", tvShowModel.name)
-                        modelContext.insert(tvShowModel)
+                    let existingTVShows = try modelContext.fetch(FetchDescriptor<TVShowModel>())
+                    let existingTVShowIDs = Set(existingTVShows.map { $0.id })
+                    
+                        if !existingTVShowIDs.contains(tvShow.id){
+                            let tvShowModel = TVShowModel(
+                                id: tvShow.id,
+                                adult: tvShow.adult,
+                                backdropPath: tvShow.backdropPath,
+                                genreIDs: tvShow.genreIDs,
+                                originCountry: tvShow.originCountry,
+                                originalLanguage: tvShow.originalLanguage,
+                                originalName: tvShow.originalName,
+                                overview: tvShow.overview,
+                                popularity: tvShow.popularity,
+                                posterPath: tvShow.posterPath,
+                                firstAirDate: tvShow.firstAirDate,
+                                name: tvShow.name,
+                                voteAverage: tvShow.voteAverage,
+                                voteCount: tvShow.voteCount,
+                                isPopular: true
+                            )
+                            print("Importing TVShow: ", tvShowModel.name)
+                            modelContext.insert(tvShowModel)
+                        }
                     
                 }
                 try modelContext.save()
@@ -744,16 +749,16 @@ extension TVShowModel {
 
         
         let sampleTVShows = [
-            TVShowModel(id: 1, adult: false, backdropPath: "/backdrop1.jpg", genreIDs: [18, 10765], originCountry: ["US"], originalLanguage: "en", originalName: "Stranger Things", overview: "A group of kids uncovers mysterious events in their small town.", popularity: 85.6, posterPath: "/poster1.jpg", firstAirDate: "2016-07-15", name: "Stranger Things", voteAverage: 8.7, voteCount: 15000),
-            TVShowModel(id: 2, adult: false, backdropPath: "/backdrop2.jpg", genreIDs: [18, 10759], originCountry: ["US"], originalLanguage: "en", originalName: "Breaking Bad", overview: "A high school teacher turned meth producer.", popularity: 92.3, posterPath: "/poster2.jpg", firstAirDate: "2008-01-20", name: "Breaking Bad", voteAverage: 9.5, voteCount: 22000),
-            TVShowModel(id: 3, adult: false, backdropPath: "/backdrop3.jpg", genreIDs: [18, 10765, 9648], originCountry: ["US"], originalLanguage: "en", originalName: "The X-Files", overview: "FBI agents investigate paranormal phenomena.", popularity: 78.2, posterPath: "/poster3.jpg", firstAirDate: "1993-09-10", name: "The X-Files", voteAverage: 8.6, voteCount: 13000),
-            TVShowModel(id: 4, adult: false, backdropPath: "/backdrop4.jpg", genreIDs: [10759, 18, 10768], originCountry: ["US"], originalLanguage: "en", originalName: "24", overview: "Agent Jack Bauer prevents terrorist threats.", popularity: 75.1, posterPath: "/poster4.jpg", firstAirDate: "2001-11-06", name: "24", voteAverage: 8.4, voteCount: 9000),
-            TVShowModel(id: 5, adult: false, backdropPath: "/backdrop5.jpg", genreIDs: [35, 18], originCountry: ["US"], originalLanguage: "en", originalName: "Friends", overview: "Six friends navigate life in New York City.", popularity: 98.5, posterPath: "/poster5.jpg", firstAirDate: "1994-09-22", name: "Friends", voteAverage: 8.9, voteCount: 19000),
-            TVShowModel(id: 6, adult: false, backdropPath: "/backdrop6.jpg", genreIDs: [18, 10765], originCountry: ["US"], originalLanguage: "en", originalName: "The Mandalorian", overview: "A bounty hunter explores the galaxy.", popularity: 89.4, posterPath: "/poster6.jpg", firstAirDate: "2019-11-12", name: "The Mandalorian", voteAverage: 8.8, voteCount: 20000),
-            TVShowModel(id: 7, adult: false, backdropPath: "/backdrop7.jpg", genreIDs: [16, 10765], originCountry: ["JP"], originalLanguage: "ja", originalName: "Attack on Titan", overview: "Humans fight against man-eating giants.", popularity: 95.0, posterPath: "/poster7.jpg", firstAirDate: "2013-04-07", name: "Attack on Titan", voteAverage: 9.0, voteCount: 25000),
-            TVShowModel(id: 8, adult: false, backdropPath: "/backdrop8.jpg", genreIDs: [18, 9648], originCountry: ["US"], originalLanguage: "en", originalName: "Twin Peaks", overview: "FBI investigates a young woman's murder.", popularity: 70.3, posterPath: "/poster8.jpg", firstAirDate: "1990-04-08", name: "Twin Peaks", voteAverage: 8.5, voteCount: 8000),
-            TVShowModel(id: 9, adult: false, backdropPath: "/backdrop9.jpg", genreIDs: [16, 10759], originCountry: ["JP"], originalLanguage: "ja", originalName: "Naruto", overview: "A young ninja dreams of becoming Hokage.", popularity: 88.7, posterPath: "/poster9.jpg", firstAirDate: "2002-10-03", name: "Naruto", voteAverage: 8.6, voteCount: 21000),
-            TVShowModel(id: 10, adult: false, backdropPath: "/backdrop10.jpg", genreIDs: [18, 35], originCountry: ["US"], originalLanguage: "en", originalName: "The Office", overview: "A mockumentary on office life.", popularity: 82.9, posterPath: "/poster10.jpg", firstAirDate: "2005-03-24", name: "The Office", voteAverage: 8.9, voteCount: 19000)
+            TVShowModel(id: 1, adult: false, backdropPath: "/backdrop1.jpg", genreIDs: [18, 10765], originCountry: ["US"], originalLanguage: "en", originalName: "Stranger Things", overview: "A group of kids uncovers mysterious events in their small town.", popularity: 85.6, posterPath: "/poster1.jpg", firstAirDate: "2016-07-15", name: "Stranger Things", voteAverage: 8.7, voteCount: 15000, isPopular: false),
+            TVShowModel(id: 2, adult: false, backdropPath: "/backdrop2.jpg", genreIDs: [18, 10759], originCountry: ["US"], originalLanguage: "en", originalName: "Breaking Bad", overview: "A high school teacher turned meth producer.", popularity: 92.3, posterPath: "/poster2.jpg", firstAirDate: "2008-01-20", name: "Breaking Bad", voteAverage: 9.5, voteCount: 22000, isPopular: false),
+            TVShowModel(id: 3, adult: false, backdropPath: "/backdrop3.jpg", genreIDs: [18, 10765, 9648], originCountry: ["US"], originalLanguage: "en", originalName: "The X-Files", overview: "FBI agents investigate paranormal phenomena.", popularity: 78.2, posterPath: "/poster3.jpg", firstAirDate: "1993-09-10", name: "The X-Files", voteAverage: 8.6, voteCount: 13000, isPopular: false),
+            TVShowModel(id: 4, adult: false, backdropPath: "/backdrop4.jpg", genreIDs: [10759, 18, 10768], originCountry: ["US"], originalLanguage: "en", originalName: "24", overview: "Agent Jack Bauer prevents terrorist threats.", popularity: 75.1, posterPath: "/poster4.jpg", firstAirDate: "2001-11-06", name: "24", voteAverage: 8.4, voteCount: 9000, isPopular: false),
+            TVShowModel(id: 5, adult: false, backdropPath: "/backdrop5.jpg", genreIDs: [35, 18], originCountry: ["US"], originalLanguage: "en", originalName: "Friends", overview: "Six friends navigate life in New York City.", popularity: 98.5, posterPath: "/poster5.jpg", firstAirDate: "1994-09-22", name: "Friends", voteAverage: 8.9, voteCount: 19000, isPopular: false),
+            TVShowModel(id: 6, adult: false, backdropPath: "/backdrop6.jpg", genreIDs: [18, 10765], originCountry: ["US"], originalLanguage: "en", originalName: "The Mandalorian", overview: "A bounty hunter explores the galaxy.", popularity: 89.4, posterPath: "/poster6.jpg", firstAirDate: "2019-11-12", name: "The Mandalorian", voteAverage: 8.8, voteCount: 20000, isPopular: false),
+            TVShowModel(id: 7, adult: false, backdropPath: "/backdrop7.jpg", genreIDs: [16, 10765], originCountry: ["JP"], originalLanguage: "ja", originalName: "Attack on Titan", overview: "Humans fight against man-eating giants.", popularity: 95.0, posterPath: "/poster7.jpg", firstAirDate: "2013-04-07", name: "Attack on Titan", voteAverage: 9.0, voteCount: 25000, isPopular: false),
+            TVShowModel(id: 8, adult: false, backdropPath: "/backdrop8.jpg", genreIDs: [18, 9648], originCountry: ["US"], originalLanguage: "en", originalName: "Twin Peaks", overview: "FBI investigates a young woman's murder.", popularity: 70.3, posterPath: "/poster8.jpg", firstAirDate: "1990-04-08", name: "Twin Peaks", voteAverage: 8.5, voteCount: 8000, isPopular: false),
+            TVShowModel(id: 9, adult: false, backdropPath: "/backdrop9.jpg", genreIDs: [16, 10759], originCountry: ["JP"], originalLanguage: "ja", originalName: "Naruto", overview: "A young ninja dreams of becoming Hokage.", popularity: 88.7, posterPath: "/poster9.jpg", firstAirDate: "2002-10-03", name: "Naruto", voteAverage: 8.6, voteCount: 21000, isPopular: false),
+            TVShowModel(id: 10, adult: false, backdropPath: "/backdrop10.jpg", genreIDs: [18, 35], originCountry: ["US"], originalLanguage: "en", originalName: "The Office", overview: "A mockumentary on office life.", popularity: 82.9, posterPath: "/poster10.jpg", firstAirDate: "2005-03-24", name: "The Office", voteAverage: 8.9, voteCount: 19000, isPopular: false)
         ]
         
         for tvShow in sampleTVShows {
@@ -780,7 +785,8 @@ extension TVShowModelDecode {
             firstAirDate: self.firstAirDate,
             name: self.name,
             voteAverage: self.voteAverage,
-            voteCount: self.voteCount
+            voteCount: self.voteCount,
+            isPopular: false 
             )
     }
 }

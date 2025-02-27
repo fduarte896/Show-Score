@@ -22,9 +22,15 @@ struct MoviesDetailView: View {
             .clipShape(RoundedRectangle(cornerRadius: 20))
         Text(movie.releaseDate).font(.callout)
         Text(movie.overview)
-//        Button("Add movie to Favourites"){
-//            await viewmodel?.addFavoriteMovie(movieId: movie.id)
-//        }
+        Button("Add movie to Favourites"){
+            Task {
+                print(movie.id)
+                if let sessionID = globalSessionID{
+                    await addFavoriteMovie(movieId: movie.id, sessionID: sessionID)
+                }
+                print("Oprimido el botón")
+            }
+        }
     }
     
 }

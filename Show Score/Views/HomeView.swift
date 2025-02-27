@@ -15,7 +15,7 @@ struct HomeView: View {
     
     @State var orderAscending: Bool = true
 
-    @Query var movies: [MovieModel]
+    @Query(filter: #Predicate<MovieModel> { $0.isPopular == true }) var movies: [MovieModel]
     
     private var sortedMoviesByName: [MovieModel] {
         movies.sorted { movie1, movie2 in
@@ -30,8 +30,9 @@ struct HomeView: View {
             orderAscending ? person1.name < person2.name : person1.name > person2.name
         }
     }
-    @Query var tvShows: [TVShowModel]
-    
+//    @Query var tvShows: [TVShowModel]
+    @Query(filter: #Predicate<TVShowModel> { $0.isPopular == true} ) var tvShows: [TVShowModel]
+ 
     private var sortedTVShowsByName: [TVShowModel] {
         tvShows.sorted { tvShow1, tvShow2 in
             orderAscending ? tvShow1.name < tvShow2.name : tvShow1.name > tvShow2.name

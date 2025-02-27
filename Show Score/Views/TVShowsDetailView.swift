@@ -10,6 +10,7 @@ import SwiftUI
 struct TVShowsDetailView: View {
     var tvShow : TVShowModel
     var body: some View {
+        Text(String(tvShow.id))
         Text(tvShow.name)
             .font(.title)
         Image(uiImage: tvShow.viewImage)
@@ -19,6 +20,13 @@ struct TVShowsDetailView: View {
             .clipShape(RoundedRectangle(cornerRadius: 20))
         Text(tvShow.overview)
             .bold()
+        Button("Add TV Show to Favorites") {
+            Task {
+                if let sessionID = globalSessionID {
+                    await addFavoriteTVShow(tvShowId: tvShow.id, sessionID: sessionID)
+                }
+            }
+        }
     }
 }
 

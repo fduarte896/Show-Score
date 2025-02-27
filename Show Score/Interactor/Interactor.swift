@@ -44,7 +44,8 @@ struct MovieInteractor: MovieInteractorProtocol {
                 voteCount: movieDecode.voteCount,
                 genreIDs: movieDecode.genreIDs,
                 adult: movieDecode.adult,
-                video: movieDecode.video
+                video: movieDecode.video,
+                isPopular: true
             )
         }
     }

@@ -46,7 +46,8 @@ struct SimpleLoginView: View {
             Button("Create SessionID"){
                 Task {
                     if let tokenAuthenticated = self.requestToken {
-                        self.sessionId = await createSessionId(token: tokenAuthenticated)
+//                        self.sessionId = await createSessionId(token: tokenAuthenticated)
+                        globalSessionID = await createSessionId(token: tokenAuthenticated)
                         print("Al menos se intentó crear la session")
                     } else {
                         print( "No se obtuvo el token")
@@ -55,13 +56,17 @@ struct SimpleLoginView: View {
             }
             Button("Cargar las películas"){
                 Task {
-                    await getFavouriteMovies(sessionId: self.sessionId!, modelContext: modelContext)
+                    if let sessionID = globalSessionID {
+                        await getFavouriteMovies(sessionId: sessionID, modelContext: modelContext)
+                    }
                 }
 
             }
             Button("Cargar los TV Shows") {
                 Task {
-                    await getFavouriteTVShows(sessionId: self.sessionId!, modelContext: modelContext)
+                    if let sessionId = globalSessionID{
+                        await getFavouriteTVShows(sessionId: sessionId, modelContext: modelContext)
+                    }
                 }
             }
         }
