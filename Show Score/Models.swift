@@ -79,6 +79,11 @@ class MovieModel {
         return url
     }
     
+    var urlToGetBackdropImage: URL? {
+        guard !backdropPath.isEmpty else { return nil }
+        return URL(string: "https://image.tmdb.org/t/p/w1280" + backdropPath)
+    }
+    
     enum CodingKeys: String, CodingKey {
         case originalTitle = "original_title"
         case posterPath = "poster_path"
@@ -114,26 +119,38 @@ class MovieModel {
 struct MovieModelDecode: Identifiable, Codable {
     let id: Int
     var title: String
-    var originalTitle: String
-    var originalLanguage: String
-    var overview: String
-    var popularity: Double
-    var posterPath: String
-    var posterImage : Data?
-    var backdropPath: String
-    var releaseDate: String
-    var voteAverage: Double
-    var voteCount: Int
-    var genreIDs: [Int]
-    var adult: Bool
-    var video: Bool
+    var originalTitle: String?
+    var originalLanguage: String?
+    var overview: String?
+    var popularity: Double?
+    var posterPath: String?
+    var backdropPath: String?
+    var releaseDate: String?
+    var voteAverage: Double?
+    var voteCount: Int?
+    var genreIDs: [Int]?
+    var adult: Bool?
+    var video: Bool?
+    var budget: Int?  // Nuevo campo
+    var revenue: Int?  // Nuevo campo
+    var runtime: Int?  // Nuevo campo
+    var status: String?  // Nuevo campo
+    var tagline: String?  // Nuevo campo
+    var belongsToCollection: BelongsToCollection? // Nuevo campo
+    var genres: [Genre]?  // Nuevo campo
     
-    var urlToGetMovieImage : URL? {
-        let urlBase = "https://image.tmdb.org/t/p/w500"
-        let url = URL(string: urlBase + posterPath)
-        return url
+    struct BelongsToCollection: Codable {
+        let id: Int
+        let name: String
+        let posterPath: String?
+        let backdropPath: String?
     }
     
+    struct Genre: Codable {
+        let id: Int
+        let name: String
+    }
+
     enum CodingKeys: String, CodingKey {
         case originalTitle = "original_title"
         case originalLanguage = "original_language"
@@ -143,9 +160,15 @@ struct MovieModelDecode: Identifiable, Codable {
         case voteAverage = "vote_average"
         case voteCount = "vote_count"
         case genreIDs = "genre_ids"
-//        case posterImage
         case adult
         case video
+        case budget
+        case revenue
+        case runtime
+        case status
+        case tagline
+        case belongsToCollection = "belongs_to_collection"
+        case genres
         case id
         case title
         case overview
@@ -168,36 +191,7 @@ class FavoriteMovieModel {
 
 
 extension MovieModel {
-    
-//    @MainActor
-//    
-//    static func downloadPreviewMovieImages() async {
-//        let previewContext = preview.mainContext
-//        let filter = #Predicate<MovieModel> { $0.posterImage == nil }
-//        
-//        guard let previewMovies = try? previewContext.fetch(FetchDescriptor(predicate: filter)) else {
-//            print("No preview movies found for image download")
-//            return
-//        }
-//        
-//        for movie in previewMovies {
-//            guard let url = movie.urlToGetMovieImage else { continue }
-//            print("Downloading preview movie image for \(movie.posterPath)")
-//            
-//            do {
-//                let (data, _) = try await URLSession.shared.getData1(for: url)
-//                movie.posterImage = data
-//            } catch {
-//                print("Error downloading preview movie image: \(movie.posterPath). Error: \(error.localizedDescription)")
-//            }
-//        }
-//        
-//        do {
-//            try previewContext.save()
-//        } catch {
-//            print("Error saving preview movie images: \(error.localizedDescription)")
-//        }
-//    }
+
     
     var viewImage: UIImage {
         guard let image = posterImage else { return UIImage(resource: .interstellar)}
@@ -294,7 +288,7 @@ extension MovieModel {
                 let (data, _) = try await URLSession.shared.getData2(for: request) //Traemos el JSON de la URLSession, el ´get data´ viene custom en una extensión porque necesitamos que el argumento sea sendable.
                 
     //            print(String(decoding: data, as: UTF8.self))
-                let movies = try JSONDecoder().decode(Movies.self, from: data)
+                let movies = try JSONDecoder().decode(PopularMoviesResponseModelDecode.self, from: data)
 
                 //Finalmente hacemos un loop por el array de structs que llegan de la llamada para insertarlos como modelos de SwiftData.
                 
@@ -309,19 +303,22 @@ extension MovieModel {
                         let movieModel = MovieModel(
                             id: movie.id,
                             title: movie.title,
-                            originalTitle: movie.originalTitle,
-                            overview: movie.overview,
-                            popularity: movie.popularity,
-                            posterPath: movie.posterPath,
-                            backdropPath: movie.backdropPath,
-                            releaseDate: movie.releaseDate,
-                            voteAverage: movie.voteAverage,
-                            voteCount: movie.voteCount,
-                            genreIDs: movie.genreIDs,
-                            adult: movie.adult,
-                            video: movie.video,
+                            originalTitle: movie.originalTitle ?? "",
+                            overview: movie.overview ?? "",
+                            popularity: movie.popularity ?? 0.0,
+                            posterPath: movie.posterPath ?? "",
+                            backdropPath: movie.backdropPath ?? "",
+                            releaseDate: movie.releaseDate ?? "",
+                            voteAverage: movie.voteAverage ?? 0.0,
+                            voteCount: movie.voteCount ?? 0,
+                            genreIDs: movie.genreIDs ?? [],
+                            adult: movie.adult ?? false,
+                            video: movie.video ?? false,
                             isPopular: true
                             )
+                        print(
+                            "Importing movie: ", movie.title
+                        )
                         modelContext.insert(movieModel)
                     }
 
@@ -330,7 +327,7 @@ extension MovieModel {
                 await downloadMovieImages()
                 
             } catch {
-                print("Error: \(error)")
+                print("Error in the background task of importing movies: \(error)")
             }
             
         }
@@ -414,22 +411,21 @@ extension MovieModelDecode {
         return MovieModel(
             id: self.id,
             title: self.title,
-            originalTitle: self.originalTitle,
-            overview: self.overview,
-            popularity: self.popularity,
-            posterPath: self.posterPath,
-            backdropPath: self.backdropPath,
-            releaseDate: self.releaseDate,
-            voteAverage: self.voteAverage,
-            voteCount: self.voteCount,
-            genreIDs: self.genreIDs,
-            adult: self.adult,
-            video: self.video,
-            isPopular: false
+            originalTitle: self.originalTitle ?? "Desconocido",
+            overview: self.overview ?? "No hay descripción disponible.",
+            popularity: self.popularity ?? 0.0,
+            posterPath: self.posterPath ?? "",
+            backdropPath: self.backdropPath ?? "",
+            releaseDate: self.releaseDate ?? "Fecha desconocida",
+            voteAverage: self.voteAverage ?? 0.0,
+            voteCount: self.voteCount ?? 0,
+            genreIDs: self.genreIDs ?? [],
+            adult: self.adult ?? false,
+            video: self.video ?? false,
+            isPopular: false // Ajusta esto según sea necesario
         )
     }
 }
-
 @Model
 class TVShowsResponseModel {
     var page: Int
@@ -491,7 +487,7 @@ class TVShowModel {
 //    @Attribute(.unique)
     var id: Int
     var adult: Bool
-    var backdropPath: String?
+    var backdropPath: String
     var genreIDs: [Int]
     var originCountry: [String]
     var originalLanguage: String
@@ -510,6 +506,11 @@ class TVShowModel {
         let urlBase = "https://image.tmdb.org/t/p/w500"
         let url = URL(string: urlBase + posterPath)
         return url
+    }
+    
+    var urlToGetBackdropImage : URL? {
+        guard !backdropPath.isEmpty else { return nil }
+        return URL(string: "https://image.tmdb.org/t/p/w1280" + backdropPath)
     }
 
     enum CodingKeys: String, CodingKey {
@@ -549,7 +550,7 @@ class TVShowModel {
     ) {
         self.id = id
         self.adult = adult
-        self.backdropPath = backdropPath
+        self.backdropPath = backdropPath ?? ""
         self.genreIDs = genreIDs
         self.originCountry = originCountry
         self.originalLanguage = originalLanguage
@@ -565,27 +566,60 @@ class TVShowModel {
     }
 }
 
-struct TVShowModelDecode : Identifiable, Codable {
-    var id: Int
+struct TVShowModelDecode: Identifiable, Codable {
+    let id: Int
     var adult: Bool
     var backdropPath: String?
-    var genreIDs: [Int]
-    var originCountry: [String]
-    var originalLanguage: String
-    var originalName: String
-    var overview: String
-    var popularity: Double
-    var posterPath: String
-    var posterImage: Data?
-    var firstAirDate: String
-    var name: String
-    var voteAverage: Double
-    var voteCount: Int
+    var genreIDs: [Int]?
+    var genres: [Genre]? // ✅ Ahora se usa correctamente
+    var originCountry: [String]?
+    var originalLanguage: String?
+    var originalName: String?
+    var overview: String?
+    var popularity: Double?
+    var posterPath: String?
+    var firstAirDate: String?
+    var lastAirDate: String?
+    var name: String?
+    var voteAverage: Double?
+    var voteCount: Int?
+    var numberOfEpisodes: Int?
+    var numberOfSeasons: Int?
+    var homepage: String?
+    var status: String?
+    var tagline: String?
+    var type: String?
+    var networks: [Network]?
+    var createdBy: [Creator]?
+    var seasons: [Season]?
     
-    var urlToGetTVShowImage: URL? {
-        let urlBase = "https://image.tmdb.org/t/p/w500"
-        let url = URL(string: urlBase + posterPath)
-        return url
+    struct Genre: Codable {
+        let id: Int
+        let name: String
+    }
+
+    struct Network: Codable {
+        let id: Int
+        let name: String
+        let logoPath: String?
+        let originCountry: String?
+    }
+
+    struct Creator: Codable {
+        let id: Int
+        let name: String
+        let originalName: String?
+        let profilePath: String?
+    }
+
+    struct Season: Codable {
+        let id: Int
+        let name: String
+        let overview: String?
+        let airDate: String?
+        let episodeCount: Int?
+        let seasonNumber: Int?
+        let posterPath: String?
     }
 
     enum CodingKeys: String, CodingKey {
@@ -593,6 +627,7 @@ struct TVShowModelDecode : Identifiable, Codable {
         case adult
         case backdropPath = "backdrop_path"
         case genreIDs = "genre_ids"
+        case genres
         case originCountry = "origin_country"
         case originalLanguage = "original_language"
         case originalName = "original_name"
@@ -600,10 +635,19 @@ struct TVShowModelDecode : Identifiable, Codable {
         case popularity
         case posterPath = "poster_path"
         case firstAirDate = "first_air_date"
+        case lastAirDate = "last_air_date"
         case name
         case voteAverage = "vote_average"
         case voteCount = "vote_count"
-        case posterImage
+        case numberOfEpisodes = "number_of_episodes"
+        case numberOfSeasons = "number_of_seasons"
+        case homepage
+        case status
+        case tagline
+        case type
+        case networks
+        case createdBy = "created_by"
+        case seasons
     }
 }
 
@@ -626,7 +670,7 @@ extension TVShowModel {
             
             for tvShow in tvShowsWithOutImages {
                 guard let url = tvShow.urlToGetTVShowImage else {continue}
-                print("Downloading tvShow image for \(tvShow.posterPath)")
+//                print("Downloading tvShow image for \(tvShow.posterPath)")
                 do {
                     let (data, _) = try await URLSession.shared.getData1(for: url)
                     tvShow.posterImage = data
@@ -735,7 +779,7 @@ extension TVShowModel {
                 try modelContext.save()
                 await downloadTVShowImages()
             } catch {
-                print("Error importing TV Shows: \(error)")
+                print("Error in the bacground task of importing TV Shows: \(error)")
             }
         }
 
@@ -774,20 +818,20 @@ extension TVShowModelDecode {
         return TVShowModel(
             id: self.id,
             adult: self.adult,
-            backdropPath: self.backdropPath,
-            genreIDs: self.genreIDs,
-            originCountry: self.originCountry,
-            originalLanguage: self.originalLanguage,
-            originalName: self.originalName,
-            overview: self.overview,
-            popularity: self.popularity,
-            posterPath: self.posterPath,
-            firstAirDate: self.firstAirDate,
-            name: self.name,
-            voteAverage: self.voteAverage,
-            voteCount: self.voteCount,
-            isPopular: false 
-            )
+            backdropPath: self.backdropPath ?? "",
+            genreIDs: self.genreIDs ?? [],
+            originCountry: self.originCountry ?? [],
+            originalLanguage: self.originalLanguage ?? "",
+            originalName: self.originalName ?? "",
+            overview: self.overview ?? "No hay descripción disponible.",
+            popularity: self.popularity ?? 0.0,
+            posterPath: self.posterPath ?? "",
+            firstAirDate: self.firstAirDate ?? "Fecha desconocida",
+            name: self.name ?? "",
+            voteAverage: self.voteAverage ?? 0.0,
+            voteCount: self.voteCount ?? 0,
+            isPopular: false
+        )
     }
 }
 
@@ -825,6 +869,60 @@ class PeopleResponseModel {
     }
 }
 
+class PeopleResponseModelDecode: Decodable {
+    var page: Int
+    var results: [PersonModelDecode]    // Array de personas
+    var totalPages: Int
+    var totalResults: Int
+
+    // Mapeo de las claves JSON a las propiedades Swift
+    enum CodingKeys: String, CodingKey {
+        case page
+        case results
+        case totalPages = "total_pages"
+        case totalResults = "total_results"
+    }
+    
+    init(page: Int, results: [PersonModelDecode], totalPages: Int, totalResults: Int) {
+        self.page = page
+        self.results = results
+        self.totalPages = totalPages
+        self.totalResults = totalResults
+    }
+}
+
+struct PersonModelDecode: Identifiable, Decodable {
+    var id: Int
+    var adult: Bool
+    var gender: Int
+    var knownForDepartment: String
+    var name: String
+    var originalName: String
+    var popularity: Double
+    var profilePath: String?
+    var profileImage: Data?
+    
+    var urlToGetPersonImage: URL? {
+        guard let profilePath = profilePath else { return nil }
+        let urlBase = "https://image.tmdb.org/t/p/w500"
+        let url = URL(string: urlBase + profilePath)
+        return url
+    }
+    
+    
+    enum CodingKeys: String, CodingKey {
+        case id
+        case adult
+        case gender
+        case knownForDepartment = "known_for_department"
+        case name
+        case originalName = "original_name"
+        case popularity
+        case profilePath = "profile_path"
+        case profileImage
+    }
+}
+
 @Model
 class PersonModel {
     
@@ -835,10 +933,11 @@ class PersonModel {
     var name: String
     var originalName: String
     var popularity: Double
-    var profilePath: String
+    var profilePath: String?
     var profileImage: Data?
     
     var urlToGetPersonImage: URL? {
+        guard let profilePath = profilePath else { return nil }
         let urlBase = "https://image.tmdb.org/t/p/w500"
         let url = URL(string: urlBase + profilePath)
         return url
@@ -880,6 +979,8 @@ class PersonModel {
     }
 }
 
+
+
 extension PersonModel {
     
     var viewImage: UIImage {
@@ -896,10 +997,10 @@ extension PersonModel {
         func downloadPeopleImages() async {
             let filter = #Predicate<PersonModel> { $0.profileImage == nil }
             guard let peopleWithOutImages = try? modelContext.fetch(FetchDescriptor(predicate: filter)) else { return }
-            
+            print("Downloading people images")
             for person in peopleWithOutImages {
                 guard let url = person.urlToGetPersonImage else { break }
-                print("Downloading person Image", person.profilePath)
+
                 do {
                     let (data, _) = try await URLSession.shared.getData1(for: url)
                     person.profileImage = data
@@ -961,8 +1062,8 @@ extension PersonModel {
 
                     do {
                         let (data, _) = try await URLSession.shared.getData2(for: request)
-                        let people = try JSONDecoder().decode(People.self, from: data)
-                        
+                        let people = try JSONDecoder().decode(PeopleResponseModelDecode.self, from: data)
+                        print("Importing people")
                         for person in people.results {
                             
                             let personModel = PersonModel(
@@ -973,18 +1074,18 @@ extension PersonModel {
                                 name: person.name,
                                 originalName: person.originalName,
                                 popularity: person.popularity,
-                                profilePath: person.profilePath
+                                profilePath: person.profilePath ?? ""
 
                             )
 //                            print(person.name)
                             modelContext.insert(personModel)
-                            print("Importing person original name:", personModel.originalName)
+
 
                         }
                         try modelContext.save()
                         await downloadPeopleImages()
                     } catch {
-                        print("Error: (\(error))")
+                        print("Error in the background task of importing people: (\(error))")
                     }
                     
                 }
@@ -1018,6 +1119,45 @@ extension PersonModel {
         
     }
 
+//Para decodificar la respuesta de details de una persona que es distinta a la que llega de popular people.
+struct PersonDetailModel: Identifiable, Codable {
+    let id: Int
+    let name: String
+    let biography: String?
+    let birthday: String?
+    let deathday: String?
+    let gender: Int
+    let placeOfBirth: String?
+    let popularity: Double
+    let profilePath: String?
+    let knownForDepartment: String
+    let alsoKnownAs: [String]
+    var profileImage: Data?
+    
+    var urlToGetPersonImage: URL? {
+        guard let profilePath = profilePath else { return nil }
+        let urlBase = "https://image.tmdb.org/t/p/w500"
+        let url = URL(string: urlBase + profilePath)
+        return url
+    }
+    
+    enum CodingKeys: String, CodingKey {
+        case id, name, biography, birthday, deathday, gender, popularity
+        case placeOfBirth = "place_of_birth"
+        case profilePath = "profile_path"
+        case knownForDepartment = "known_for_department"
+        case alsoKnownAs = "also_known_as"
+    }
+    
+    
+    var viewImage: UIImage {
+        
+        guard let image = profileImage else { return UIImage(resource: .diCaprio)}
+        
+        return UIImage(data: image) ?? UIImage(resource: .diCaprio)
+    }
+    
+}
 
 
 extension URLSession {
@@ -1035,3 +1175,35 @@ extension URLSession {
 
 
 
+enum MediaType: String, Decodable {
+    case movie, tv, person
+}
+
+struct SearchResult : Decodable, Identifiable, Hashable {
+    let id: Int
+    let title: String?
+    let name: String?
+    let mediaType: MediaType
+    let posterPath: String?
+    let backdropPath: String?
+    let overview: String?
+    let popularity: Double?
+    let releaseDate: String?
+    let firstAirDate: String?
+    let profilePath: String?
+    
+    enum CodingKeys: String, CodingKey {
+        case id, title, name, overview, popularity
+        case mediaType = "media_type"
+        case posterPath = "poster_path"
+        case backdropPath = "backdrop_path"
+        case releaseDate = "release_date"
+        case firstAirDate = "first_air_date"
+        case profilePath = "profile_path"
+    }
+    
+}
+
+struct SearchResponse : Decodable {
+    let results: [SearchResult]
+}

@@ -67,43 +67,88 @@ struct SessionIdResponse: Decodable {
 }
 
 func createSessionId(token: String) async -> String? {
-
-    let parameters = ["request_token": token] as [String : Any?]
+    let parameters = ["request_token": token]
 
     let url = URL(string: "https://api.themoviedb.org/3/authentication/session/new")!
     var request = URLRequest(url: url)
     request.httpMethod = "POST"
     request.timeoutInterval = 10
     request.allHTTPHeaderFields = [
-      "accept": "application/json",
-      "content-type": "application/json",
-      "Authorization": "Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI5Y2ZjYmE2N2NmNDQzNzU3OGNmN2EwY2ZhNjU1ODI0YyIsIm5iZiI6MTY5OTg3OTg3MS4zMDcwMDAyLCJzdWIiOiI2NTUyMWJiZmZkNmZhMTAwYWI5NzFkMmYiLCJzY29wZXMiOlsiYXBpX3JlYWQiXSwidmVyc2lvbiI6MX0.peObVLgL6LnNpfdnr6VPK99q_Lvxm7U2DVr1VTt8z4w"
+        "accept": "application/json",
+        "content-type": "application/json",
+        "Authorization": "Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI5Y2ZjYmE2N2NmNDQzNzU3OGNmN2EwY2ZhNjU1ODI0YyIsIm5iZiI6MTY5OTg3OTg3MS4zMDcwMDAyLCJzdWIiOiI2NTUyMWJiZmZkNmZhMTAwYWI5NzFkMmYiLCJzY29wZXMiOlsiYXBpX3JlYWQiXSwidmVyc2lvbiI6MX0.peObVLgL6LnNpfdnr6VPK99q_Lvxm7U2DVr1VTt8z4w"
     ]
-    
+
     do {
         let postData = try JSONSerialization.data(withJSONObject: parameters, options: [])
         request.httpBody = postData
-    } catch {
-        print("Error in the JSON serialization: \(error)")
-        return nil
-    }
-//    request.httpBody = postData
 
-    do {
         let (data, _) = try await URLSession.shared.data(for: request)
         let decoder = JSONDecoder()
-        let sessionId = try decoder.decode(SessionIdResponse.self, from: data)
-        print("Sesion iniciada correctamente: \(sessionId.session_id)")
-//        print(sessionId.sessionId)
-        
-        return sessionId.session_id
+        let sessionResponse = try decoder.decode(SessionIdResponse.self, from: data)
+
+        if sessionResponse.success {
+            print("🔹 Nuevo sessionId obtenido: \(sessionResponse.session_id)")
+            
+            // Guardamos la sesión en UserDefaults
+            UserDefaults.standard.set(sessionResponse.session_id, forKey: "sessionId")
+            UserDefaults.standard.synchronize()
+            
+            let storedSessionId = UserDefaults.standard.string(forKey: "sessionId") ?? "No sessionId guardado"
+            print("✅ sessionId almacenado en UserDefaults: \(storedSessionId)")
+
+            return sessionResponse.session_id
+        } else {
+            print("❌ Error: La sesión no fue creada correctamente.")
+            return nil
+        }
     } catch {
-        print("Error creating session id: \(error)")
+        print("❌ Error creando session_id: \(error)")
         return nil
     }
 }
 
+func validateSession() async -> Bool {
+    guard let sessionId = UserDefaults.standard.string(forKey: "sessionId") else {
+        print("❌ No hay sessionId guardado en UserDefaults.")
+        return false
+    }
 
+    let url = URL(string: "https://api.themoviedb.org/3/account?session_id=\(sessionId)")!
+    var request = URLRequest(url: url)
+    request.httpMethod = "GET"
+    request.timeoutInterval = 10
+    request.allHTTPHeaderFields = [
+        "accept": "application/json",
+        "Authorization": "Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI5Y2ZjYmE2N2NmNDQzNzU3OGNmN2EwY2ZhNjU1ODI0YyIsIm5iZiI6MTY5OTg3OTg3MS4zMDcwMDAyLCJzdWIiOiI2NTUyMWJiZmZkNmZhMTAwYWI5NzFkMmYiLCJzY29wZXMiOlsiYXBpX3JlYWQiXSwidmVyc2lvbiI6MX0.peObVLgL6LnNpfdnr6VPK99q_Lvxm7U2DVr1VTt8z4w"
+    ]
+
+    do {
+        try await Task.sleep(nanoseconds: 500_000_000) // 0.5 segundos de espera
+        let (data, response) = try await URLSession.shared.data(for: request)
+
+        if let httpResponse = response as? HTTPURLResponse {
+            print("📌 Código de respuesta: \(httpResponse.statusCode)")
+
+            if httpResponse.statusCode == 200 {
+                print("✅ Sesión válida.")
+                return true
+            } else {
+                print("⚠️ Sesión inválida, respuesta del servidor:")
+                if let jsonString = String(data: data, encoding: .utf8) {
+                    print(jsonString)
+                }
+                return false
+            }
+        } else {
+            print("❌ Respuesta inesperada del servidor.")
+            return false
+        }
+    } catch {
+        print("❌ Error validando sesión: \(error)")
+        return false
+    }
+}
 
 func getFavouriteMovies(sessionId: String, modelContext: ModelContext) async {
     let url = URL(string: "https://api.themoviedb.org/3/account/\(sessionId)/favorite/movies")!
@@ -260,6 +305,46 @@ func addFavoriteMovie(movieId: Int, sessionID: String) async {
     }
     
 }
+
+func deleteFavoriteMovie(movieId: Int, sessionID: String, modelContext: ModelContext) async {
+    
+    let parameters = [
+      "media_type": "movie",
+      "media_id": "\(movieId)",
+      "favorite": false
+    ] as [String : Any?]
+
+    do {
+        let postData = try JSONSerialization.data(withJSONObject: parameters, options: [])
+        
+        let url = URL(string: "https://api.themoviedb.org/3/account/\(sessionID)/favorite")!
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.timeoutInterval = 10
+        request.allHTTPHeaderFields = [
+          "accept": "application/json",
+          "content-type": "application/json",
+          "Authorization": "Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI5Y2ZjYmE2N2NmNDQzNzU3OGNmN2EwY2ZhNjU1ODI0YyIsIm5iZiI6MTY5OTg3OTg3MS4zMDcwMDAyLCJzdWIiOiI2NTUyMWJiZmZkNmZhMTAwYWI5NzFkMmYiLCJzY29wZXMiOlsiYXBpX3JlYWQiXSwidmVyc2lvbiI6MX0.peObVLgL6LnNpfdnr6VPK99q_Lvxm7U2DVr1VTt8z4w"
+        ]
+        request.httpBody = postData
+        let (data, response) = try await URLSession.shared.data(for: request)
+        if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 {
+            //let existingMovie = try? modelContext.fetch(FetchDescriptor<MovieModel>(predicate: #Predicate { $0.id == movieDecode.id })).first
+            if let movieToDelete = try modelContext.fetch(FetchDescriptor<FavoriteMovieModel>(predicate: #Predicate { $0.id == movieId })).first  {
+                modelContext.delete(movieToDelete)
+            }
+            print("statusCode: \(httpResponse.statusCode)")
+        }
+        if let jsonString = String(data: data, encoding: .utf8) {
+            print("La respuesta de eliminar una movie favorita es: \(jsonString)")
+        }
+        
+    } catch {
+        print("Error: cannot eliminate the movie with id: \(movieId) from favorites.")
+    }
+    
+}
+
 func addFavoriteTVShow(tvShowId: Int, sessionID: String) async {
     
     let parameters = [
@@ -290,5 +375,41 @@ func addFavoriteTVShow(tvShowId: Int, sessionID: String) async {
         }
     } catch {
         print("Error: cannot add the tv show with id \(tvShowId) as favorite")
+    }
+}
+
+func deleteFavoriteTVShow(tvShowId: Int, sessionID: String, modelContext: ModelContext) async {
+    
+    let parameters = [
+        "media_type": "tv",
+        "media_id": "\(tvShowId)",
+        "favorite": false
+    ] as [String : Any?]
+    print(tvShowId)
+    do {
+        let postData = try JSONSerialization.data(withJSONObject: parameters, options: [])
+        let url = URL(string: "https://api.themoviedb.org/3/account/\(sessionID)/favorite")!
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.timeoutInterval = 10
+        request.allHTTPHeaderFields = [
+          "accept": "application/json",
+          "content-type": "application/json",
+          "Authorization": "Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI5Y2ZjYmE2N2NmNDQzNzU3OGNmN2EwY2ZhNjU1ODI0YyIsIm5iZiI6MTY5OTg3OTg3MS4zMDcwMDAyLCJzdWIiOiI2NTUyMWJiZmZkNmZhMTAwYWI5NzFkMmYiLCJzY29wZXMiOlsiYXBpX3JlYWQiXSwidmVyc2lvbiI6MX0.peObVLgL6LnNpfdnr6VPK99q_Lvxm7U2DVr1VTt8z4w"
+        ]
+        request.httpBody = postData
+        let (data, response) = try await URLSession.shared.data(for: request)
+        if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 {
+            if let tvShowToDelete = try modelContext.fetch(FetchDescriptor<FavoriteTVShowModel>(predicate: #Predicate { $0.id == tvShowId })).first {
+                modelContext.delete(tvShowToDelete)
+            }
+            print("statusCode: \(httpResponse.statusCode)")
+        }
+        if let jsonString = String(data: data, encoding: .utf8) {
+            print("La respuesta para eliminar un TV Show favorito es: \(jsonString)")
+            
+        }
+    } catch {
+        print("Error: cannot delete the tv show with id \(tvShowId) from favorites")
     }
 }

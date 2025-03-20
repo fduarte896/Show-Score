@@ -8,18 +8,33 @@
 import SwiftUI
 
 struct MoviesCellView: View {
-    var movie : MovieModel
-    
+    var movie: MovieModel
+    @State private var isVisible = false // Controla la animación
+
     var body: some View {
-        VStack{
+        VStack(alignment: .leading, spacing: 6) {
             Image(uiImage: movie.viewImage)
                 .resizable()
-                .scaledToFit()
-                .frame(width: 100, height: 100)
-                .clipShape(.rect(cornerRadius: 8))
+                .scaledToFill()
+                .frame(width: 170, height: 260)
+                .clipped()
+                .clipShape(RoundedRectangle(cornerRadius: 12))
 
             Text(movie.title)
-            Text(String(movie.voteAverage))
+                .font(.headline)
+                .lineLimit(2)
+                .multilineTextAlignment(.leading)
+
+            Text("\(movie.voteAverage, specifier: "%.1f") ⭐")
+                .font(.subheadline)
+                .foregroundColor(.gray)
+        }
+        .frame(width: 170)
+        .opacity(isVisible ? 1 : 0) // Inicialmente invisible
+        .offset(y: isVisible ? 0 : 20) // Comienza un poco más abajo
+        .animation(.easeOut(duration: 0.5), value: isVisible)
+        .onAppear {
+            isVisible = true // Activa la animación cuando aparece en pantalla
         }
     }
 }

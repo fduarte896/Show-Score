@@ -12,24 +12,31 @@ struct MainView: View {
     @Environment(\.modelContext) var modelContext
     //Inicializamos el viewmodel sin un modelcontext porque si lo usáramos inmediatemente entonces tendríamos un error. Entonces es en el onAppear que vamos a asignar ese modelContext al viewmodel porque es cuando la vista aparece en pantalla que puede acceder al modelContext, antes no.
     @StateObject private var viewModel = HomeViewModel(modelContext: nil)
+
+    @State private var selectedTab: Int = 0
     
     var body: some View {
-        TabView {
+        TabView(selection: $selectedTab) {
             HomeView(viewModel: viewModel).tabItem {
-                Label("Home", systemImage: "house")
+                Label("Explore", systemImage: "magnifyingglass")
             }
-            MyMoviesView()
+            .tag(0)
+
+            MyMoviesView(selectedTab: $selectedTab)
                 .tabItem {
                     Label("My movies", systemImage: "popcorn")
             }
-            MyTVShowsView()
+                .tag(1)
+            MyTVShowsView(selectedTab: $selectedTab)
                 .tabItem {
                     Label("My TV shows", systemImage: "tv")
                 }
+                .tag(2)
             SimpleLoginView()
                 .tabItem {
                     Label("Login", systemImage: "person.circle")
                 }
+                .tag(3)
         }
         .onAppear {
             viewModel.modelContext = modelContext
@@ -45,7 +52,7 @@ struct MainView: View {
 
     }
 }
-
-#Preview {
-    MainView().modelContainer(MovieModel.preview)
-}
+//
+//#Preview {
+//    MainView().modelContainer(MovieModel.preview)
+//}

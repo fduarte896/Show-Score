@@ -12,11 +12,21 @@ struct PeopleCellView: View {
     var person : PersonModel
     var body: some View {
         VStack{
-            Image(uiImage: person.viewImage)
-                .resizable()
-                .scaledToFit()
-                .frame(width: 100, height: 100)
-                .clipShape(.rect(cornerRadius: 8))
+            if let imagePath = person.profilePath{
+                AsyncImage(url: URL(string: "https://image.tmdb.org/t/p/w200\(imagePath)")) { image in
+                    image
+                        .resizable()
+                        .scaledToFit()
+                        .frame(height: 100)
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                } placeholder: {
+                    Color.gray
+                        .frame(height: 100)
+                }
+                
+                .cornerRadius(8)
+            }
+
             Text(person.name)
             Text(person.knownForDepartment)
         }

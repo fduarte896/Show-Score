@@ -1,20 +1,13 @@
-//
-//  HomeView.swift
-//  Show Score
-//
-//  Created by Felipe Duarte on 7/01/25.
-//
-
 import SwiftUI
 import SwiftData
 
 struct HomeView: View {
     @Environment(\.modelContext) var modelContext
     
-    @State var viewModel : HomeViewModel
+    @StateObject var viewModel: HomeViewModel // ✅ Aseguramos que sea observado
     
     @State var orderAscending: Bool = true
-
+    
     @Query(filter: #Predicate<MovieModel> { $0.isPopular == true }) var movies: [MovieModel]
     
     private var sortedMoviesByName: [MovieModel] {
@@ -24,125 +17,128 @@ struct HomeView: View {
     }
     
     @Query var people: [PersonModel]
-    
+
     private var sortedPeopleByName: [PersonModel] {
-        people.sorted { person1, person2 in
-            orderAscending ? person1.name < person2.name : person1.name > person2.name
-        }
+        people
+            .filter {
+                ($0.profilePath ?? "").isEmpty == false && // Filtra personas con `profilePath` válido
+                $0.knownForDepartment.lowercased() == "acting" // Filtra solo actores
+            }
+            .sorted { person1, person2 in
+                orderAscending ? person1.name < person2.name : person1.name > person2.name
+            }
     }
-//    @Query var tvShows: [TVShowModel]
+
+
+
     @Query(filter: #Predicate<TVShowModel> { $0.isPopular == true} ) var tvShows: [TVShowModel]
- 
+    
     private var sortedTVShowsByName: [TVShowModel] {
         tvShows.sorted { tvShow1, tvShow2 in
             orderAscending ? tvShow1.name < tvShow2.name : tvShow1.name > tvShow2.name
         }
     }
-
+    
     var body: some View {
         NavigationStack {
-            List {
-                Section("Popular Movies") {
-                    ScrollView(.horizontal) {
-                        HStack {
-                            ForEach(sortedMoviesByName) { movie in
-                                NavigationLink(value: movie) {
-                                    MoviesCellView(movie: movie)
-                                }
+            VStack {
+                if !viewModel.searchedText.isEmpty {
+                    if viewModel.searchResults.isEmpty {
+                        Text("No results found")
+                            .font(.title3)
+                            .foregroundColor(.gray)
+                            .padding()
+                    } else {
+                        List(viewModel.searchResults, id: \.id) { result in
+                            NavigationLink(value: result) {
+                                SearchResultCellView(result: result)
                             }
                         }
+                        .listStyle(PlainListStyle())
                     }
-                }
-
-                Section("Popular People") {
-                    ScrollView(.horizontal) {
-                        HStack {
-                            ForEach(sortedPeopleByName) { person in
-                                NavigationLink(value: person){
-                                    PeopleCellView(person: person)
+                } else {
+                    ScrollView {
+                        CarouselView(items: movies)
+                        
+                        VStack(alignment: .leading, spacing: 10) {
+                            Text("🎬 Popular Movies")
+                                .font(.title2.bold())
+                                .foregroundColor(.primary)
+                                .padding(.horizontal)
+                            
+                            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 2), spacing: 12) {
+                                ForEach(sortedMoviesByName.indices, id: \.self) { index in
+                                    NavigationLink(value: sortedMoviesByName[index]) {
+                                        MoviesCellView(movie: sortedMoviesByName[index])
+                                    }
                                 }
                             }
-                        }
-                    }
-                }
-
-                Section("Popular TV Shows") {
-                    ScrollView(.horizontal) {
-                        HStack {
-                            ForEach(sortedTVShowsByName) { tvShow in
-                                NavigationLink(value: tvShow){
-                                    TVShowsCellView(tvShow: tvShow)
+                            .padding(.horizontal, 10)
+                            
+                            Text("📺 Popular TV Shows")
+                                .font(.title2.bold())
+                                .foregroundColor(.primary)
+                                .padding(.horizontal)
+                            
+                            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 2), spacing: 12) {
+                                ForEach(sortedTVShowsByName.indices, id: \.self) { index in
+                                    NavigationLink(value: sortedTVShowsByName[index]) {
+                                        TVShowsCellView(tvShow: sortedTVShowsByName[index])
+                                    }
                                 }
+                            }
+                            .padding(.horizontal, 10)
+                            
+                            Text("Actores Destacados")
+                                .font(.headline)
+                                .padding(.horizontal)
+                            
+                            ScrollView(.horizontal, showsIndicators: false) {
+                                HStack(spacing: 8) {
+                                    ForEach(sortedPeopleByName) { person in
+                                        NavigationLink(value: person){
+                                            PeopleCellView(person: person)
+                                                .frame(width: 130, height: 170)
+                                                .cornerRadius(10)
+                                                .shadow(radius: 3)
+                                        }
+                                    }
+                                }
+                                .padding(.horizontal)
                             }
                         }
                     }
                 }
             }
+            .navigationTitle(Text("Explore"))
+            .searchable(text: $viewModel.searchedText, prompt: "Search TV Shows and Movies")
+            .onChange(of: viewModel.searchedText) { newValue, oldValue in
+                Task {
+                    await viewModel.fetchSearchResults(query: newValue)
+                    print("🔍 searchResults en HomeView: \(viewModel.searchResults.count) elementos")
+                }
+            }
             
-
             .navigationDestination(for: MovieModel.self, destination: { movie in
-                MoviesDetailView(movie: movie)
+                MoviesDetailView(movieID: movie.id)
             })
             .navigationDestination(for: TVShowModel.self, destination: { tvShow in
-                TVShowsDetailView(tvShow: tvShow)
+                TVShowsDetailView(tvShowId: tvShow.id)
             })
             .navigationDestination(for: PersonModel.self, destination: { person in
-                PersonDetailView(person: person)
+                PersonDetailView(personID: person.id)
             })
-            
-            .toolbar {
-                ToolbarItemGroup {
-                    Button(action: {
-                        Task {
-                            await viewModel.importMovies()
-                        }
-                    }) {
-                        Label("Import Movies", systemImage: "movieclapper")
-                    }
-
-                    Button(action: {
-                        Task {
-                            await viewModel.importTVShows()
-                        }
-                    }) {
-                        Label("Import TV Shows", systemImage: "tv")
-                    }
-
-                    Button(action: {
-                        Task {
-                            await viewModel.importPeople()
-                        }
-                    }) {
-                        Label("Import People", systemImage: "person")
-                    }
-
-                    Button(action: {
-                        for movie in movies {
-                            modelContext.delete(movie)
-                            try! modelContext.save()
-                        }
-                        for person in people {
-                            modelContext.delete(person)
-                        }
-                        for tvShow in tvShows {
-                            modelContext.delete(tvShow)
-                        }
-                    }) {
-                        Label("Delete All", systemImage: "minus.circle.fill")
-                    }
+            .navigationDestination(for: SearchResult.self, destination: { result in
+                switch result.mediaType {
+                case .movie:
+                    MoviesDetailView(movieID: result.id)
+                case .tv:
+                    TVShowsDetailView(tvShowId: result.id)
+                case .person:
+//                    MoviesDetailView(movieID: result.id)
+                    PersonDetailView(personID: result.id)
                 }
-            }
+            })
         }
-        
     }
-    
 }
-
-
-
-//#Preview {
-//    HomeView()
-//        .modelContainer(MovieModel.preview)
-//
-//}
-

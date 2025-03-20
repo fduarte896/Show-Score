@@ -9,73 +9,84 @@ import SwiftUI
 
 struct SimpleLoginView: View {
     
-    @State private var loginSuccess: Bool = false
     @State var requestToken : String?
-    @State var sessionId : String?
-    
+    @State private var sessionId : String? = UserDefaults.standard.string(forKey: "sessionId")
+
     @Environment(\.openURL) var openURL
     @Environment(\.modelContext) private var modelContext
-    
+
     var body: some View {
-        
-        
-        NavigationStack{
-            if let token = requestToken {
-                Button("Inicia sesión") {
-                    if let url = URL(string: "https://www.themoviedb.org/authenticate/\(token)?redirect_to=showscoreapp://loginsuccessful") {
-                        openURL(url)
-                    }
-                }
-                .font(.title)
-                .foregroundColor(.blue)
-            } else {
-                Text("Loading...")
-                    .onAppear {
+        NavigationStack {
+            if let sessionId = sessionId {
+                VStack {
+                    Text("Sesión activa")
+                        .font(.title)
+                        .foregroundColor(.green)
+
+                    Button("Cargar películas favoritas") {
                         Task {
-                            self.requestToken = await createReQuestToken()
-    //                        if let tokenAuthenticated = self.requestToken {
-    //                            self.sessionId = await createSessionId(token: tokenAuthenticated)
-    //                        } else {
-    //                            print( "No se obtuvo el token")
-    //                        }
-                            
+                            await getFavouriteMovies(sessionId: sessionId, modelContext: modelContext)
                         }
                     }
 
-            }
-            Button("Create SessionID"){
-                Task {
-                    if let tokenAuthenticated = self.requestToken {
-//                        self.sessionId = await createSessionId(token: tokenAuthenticated)
-                        globalSessionID = await createSessionId(token: tokenAuthenticated)
-                        print("Al menos se intentó crear la session")
+                    Button("Cerrar sesión") {
+                        logout()
+                    }
+                }
+            } else {
+                VStack {
+                    if let token = requestToken {
+                        Button("Iniciar Sesión") {
+                            if let url = URL(string: "https://www.themoviedb.org/authenticate/\(token)?redirect_to=showscoreapp://loginsuccessful") {
+                                openURL(url)
+                            }
+                        }
                     } else {
-                        print( "No se obtuvo el token")
+                        Text("Cargando...")
+                            .onAppear {
+                                Task {
+                                    self.requestToken = await createReQuestToken()
+                                }
+                            }
                     }
-                }
-            }
-            Button("Cargar las películas"){
-                Task {
-                    if let sessionID = globalSessionID {
-                        await getFavouriteMovies(sessionId: sessionID, modelContext: modelContext)
-                    }
-                }
 
-            }
-            Button("Cargar los TV Shows") {
-                Task {
-                    if let sessionId = globalSessionID{
-                        await getFavouriteTVShows(sessionId: sessionId, modelContext: modelContext)
+                    Button("Crear SessionID") {
+                        Task {
+                            if let tokenAuthenticated = self.requestToken {
+                                let newSessionId = await createSessionId(token: tokenAuthenticated)
+                                if let validSessionId = newSessionId {
+                                    self.sessionId = validSessionId
+                                }
+                            }
+                        }
                     }
                 }
             }
         }
-        
+        .onAppear {
+            Task {
+                let storedSessionId = UserDefaults.standard.string(forKey: "sessionId") ?? "No sessionId guardado"
+                print("📌 sessionId al abrir la app: \(storedSessionId)")
 
+                let isValid = await validateSession()
+                if !isValid {
+                    print("⚠️ Sesión inválida, eliminando sessionId guardado.")
+                    UserDefaults.standard.removeObject(forKey: "sessionId")
+                    self.sessionId = nil
+                } else {
+                    self.sessionId = UserDefaults.standard.string(forKey: "sessionId")
+                    print("✅ Sesión válida, usando sessionId: \(self.sessionId ?? "None")")
+                }
+            }
+        }
     }
-    
-}
 
+    func logout() {
+        UserDefaults.standard.removeObject(forKey: "sessionId")
+        sessionId = nil
+        print("Sesión cerrada correctamente.")
+    }
+}
 
 
 #Preview {
