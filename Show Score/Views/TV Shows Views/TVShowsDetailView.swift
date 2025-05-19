@@ -15,6 +15,8 @@ struct TVShowsDetailView: View {
     
     @Query private var favoriteTVShows : [FavoriteTVShowModel]
     
+    var viewModel : TVShowsViewModel
+    
 //    var isFavorite : Bool {
 //        return favoriteTVShows.contains { $0.tvShow.id == tvShowId }
 //    }
@@ -112,7 +114,7 @@ struct TVShowsDetailView: View {
                                     withAnimation {
                                         animateButton = true
                                     }
-                                    await addFavoriteTVShow(tvShowId: tvShowId, sessionID: sessionID)
+                                    await viewModel.addFavoriteTVShow(tvShowId: tvShowId, sessionID: sessionID)
                                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) { // 🔹 Pequeño delay para transición visual
                                         withAnimation {
                                             isFavorite = true

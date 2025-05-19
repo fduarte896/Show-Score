@@ -5,6 +5,8 @@ struct HomeView: View {
     @Environment(\.modelContext) var modelContext
     
     @StateObject var viewModel: HomeViewModel // ✅ Aseguramos que sea observado
+    @StateObject var moviesFavViewModel = FavoriteMoviesViewModel()
+    @StateObject var tvShowsFavViewModel = TVShowsViewModel()
     
     @State var orderAscending: Bool = true
     
@@ -12,7 +14,7 @@ struct HomeView: View {
     
     private var sortedMoviesByName: [MovieModel] {
         movies.sorted { movie1, movie2 in
-            orderAscending ? movie1.title < movie2.title : movie1.title > movie2.title
+            orderAscending ? movie1.voteAverage > movie2.voteAverage : movie1.voteAverage < movie2.voteAverage
         }
     }
     
@@ -35,7 +37,7 @@ struct HomeView: View {
     
     private var sortedTVShowsByName: [TVShowModel] {
         tvShows.sorted { tvShow1, tvShow2 in
-            orderAscending ? tvShow1.name < tvShow2.name : tvShow1.name > tvShow2.name
+            orderAscending ? tvShow1.voteAverage > tvShow2.voteAverage : tvShow1.voteAverage < tvShow2.voteAverage
         }
     }
     
@@ -58,7 +60,7 @@ struct HomeView: View {
                     }
                 } else {
                     ScrollView {
-                        CarouselView(items: movies)
+                        CarouselView(items: movies, viewModel: moviesFavViewModel)
                         
                         VStack(alignment: .leading, spacing: 10) {
                             Text("🎬 Popular Movies")
@@ -120,10 +122,10 @@ struct HomeView: View {
             }
             
             .navigationDestination(for: MovieModel.self, destination: { movie in
-                MoviesDetailView(movieID: movie.id)
+                MoviesDetailView(movieID: movie.id, favoriteViewModel: moviesFavViewModel)
             })
             .navigationDestination(for: TVShowModel.self, destination: { tvShow in
-                TVShowsDetailView(tvShowId: tvShow.id)
+                TVShowsDetailView(tvShowId: tvShow.id, viewModel: tvShowsFavViewModel)
             })
             .navigationDestination(for: PersonModel.self, destination: { person in
                 PersonDetailView(personID: person.id)
@@ -131,9 +133,9 @@ struct HomeView: View {
             .navigationDestination(for: SearchResult.self, destination: { result in
                 switch result.mediaType {
                 case .movie:
-                    MoviesDetailView(movieID: result.id)
+                    MoviesDetailView(movieID: result.id, favoriteViewModel: moviesFavViewModel)
                 case .tv:
-                    TVShowsDetailView(tvShowId: result.id)
+                    TVShowsDetailView(tvShowId: result.id, viewModel: tvShowsFavViewModel)
                 case .person:
 //                    MoviesDetailView(movieID: result.id)
                     PersonDetailView(personID: result.id)

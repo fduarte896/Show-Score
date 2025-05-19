@@ -9,6 +9,109 @@ import Foundation
 import SwiftData
 import UIKit
 
+@Model
+class UserModel {
+    var avatar: Avatar
+    var id: Int
+    var iso639_1: String
+    var iso3166_1: String
+    var name: String
+    var includeAdult: Bool
+    var username: String
+
+    struct Avatar: Codable {
+        let gravatar: Gravatar
+        let tmdb: TMDB
+
+        struct Gravatar: Codable {
+            let hash: String
+        }
+
+        struct TMDB: Codable {
+            let avatarPath: String?
+
+            enum CodingKeys: String, CodingKey {
+                case avatarPath = "avatar_path"
+            }
+        }
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case avatar
+        case id
+        case iso639_1
+        case iso3166_1
+        case name
+        case includeAdult = "include_adult"
+        case username
+    }
+    
+    init(avatar: Avatar, id: Int, iso639_1: String, iso3166_1: String, name: String, includeAdult: Bool, username: String) {
+        self.avatar = avatar
+        self.id = id
+        self.iso639_1 = iso639_1
+        self.iso3166_1 = iso3166_1
+        self.name = name
+        self.includeAdult = includeAdult
+        self.username = username
+    }
+}
+
+struct UserModelDecode : Codable {
+    var avatar: Avatar
+    var id: Int
+    var iso639_1: String?
+    var iso3166_1: String?
+    var name: String
+    var includeAdult: Bool?
+    var username: String
+    
+    struct Avatar: Codable {
+        let gravatar: Gravatar
+        let tmdb: TMDB
+
+        struct Gravatar: Codable {
+            let hash: String
+        }
+
+        struct TMDB: Codable {
+            let avatarPath: String?
+
+            enum CodingKeys: String, CodingKey {
+                case avatarPath = "avatar_path"
+            }
+        }
+    }
+}
+
+extension UserModelDecode {
+    func toUserModel() -> UserModel {
+        return UserModel(avatar: avatar.toAvatar(), id: self.id, iso639_1: self.iso639_1 ?? "", iso3166_1: self.iso3166_1 ?? "", name: self.name, includeAdult: self.includeAdult ?? false, username: self.username)
+    }
+}
+
+
+extension UserModelDecode.Avatar {
+    func toAvatar() -> UserModel.Avatar {
+        return UserModel.Avatar(
+            gravatar: gravatar.toGravatar(),
+            tmdb: tmdb.toTMDB()
+        )
+    }
+}
+
+extension UserModelDecode.Avatar.Gravatar {
+    func toGravatar() -> UserModel.Avatar.Gravatar {
+        return UserModel.Avatar.Gravatar(hash: hash)
+    }
+}
+
+extension UserModelDecode.Avatar.TMDB {
+    func toTMDB() -> UserModel.Avatar.TMDB {
+        return UserModel.Avatar.TMDB(avatarPath: avatarPath)
+    }
+}
+
 // Modelo principal que representa la respuesta completa de la API de popular movies.
 @Model
 class PopularMoviesResponseModel {
@@ -268,7 +371,7 @@ extension MovieModel {
         
         func importMovies() async throws  {
             
-            let url = URL(string: "https://api.themoviedb.org/3/movie/popular")!
+            let url = URL(string: "https://api.themoviedb.org/3/trending/movie/week")!
             var components = URLComponents(url: url, resolvingAgainstBaseURL: true)!
             let queryItems: [URLQueryItem] = [
                 URLQueryItem(name: "language", value: "en-US"),
@@ -728,7 +831,7 @@ extension TVShowModel {
         
         func importTVShows() async throws {
 
-            let url = URL(string: "https://api.themoviedb.org/3/tv/popular")!
+            let url = URL(string: "https://api.themoviedb.org/3/trending/tv/week")!
             var components = URLComponents(url: url, resolvingAgainstBaseURL: true)!
             let queryItems: [URLQueryItem] = [
               URLQueryItem(name: "language", value: "en-US"),
@@ -895,7 +998,7 @@ struct PersonModelDecode: Identifiable, Decodable {
     var id: Int
     var adult: Bool
     var gender: Int
-    var knownForDepartment: String
+    var knownForDepartment: String?
     var name: String
     var originalName: String
     var popularity: Double
@@ -1044,7 +1147,7 @@ extension PersonModel {
                 
                 func importPeople() async throws {
 
-                    let url = URL(string: "https://api.themoviedb.org/3/person/popular")!
+                    let url = URL(string: "https://api.themoviedb.org/3/trending/person/week")!
                     var components = URLComponents(url: url, resolvingAgainstBaseURL: true)!
                     let queryItems: [URLQueryItem] = [
                       URLQueryItem(name: "language", value: "en-US"),
@@ -1070,7 +1173,7 @@ extension PersonModel {
                                 id: person.id,
                                 adult: person.adult,
                                 gender: person.gender,
-                                knownForDepartment: person.knownForDepartment,
+                                knownForDepartment: person.knownForDepartment ?? "",
                                 name: person.name,
                                 originalName: person.originalName,
                                 popularity: person.popularity,

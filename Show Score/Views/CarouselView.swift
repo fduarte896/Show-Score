@@ -9,14 +9,14 @@ import SwiftUI
 
 struct CarouselView: View {
     let items: [MovieModel]
-    
+    var viewModel : FavoriteMoviesViewModel
     @State private var currentIndex = 0
     private let timer = Timer.publish(every: 4, on: .main, in: .common).autoconnect() // Auto-scroll cada 4s
     
     var body: some View {
         TabView(selection: $currentIndex) {
             ForEach(items.prefix(5).indices, id: \.self) { index in
-                NavigationLink(destination: MoviesDetailView(movieID: items[index].id)){
+                NavigationLink(destination: MoviesDetailView(movieID: items[index].id, favoriteViewModel: viewModel)){
                     ZStack(alignment: .bottom) {
                         AsyncImage(url: items[index].urlToGetBackdropImage) { image in
                             image.resizable()

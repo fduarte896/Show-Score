@@ -13,6 +13,8 @@ struct MoviesDetailView: View {
     @State private var movie: MovieModel?
     var viewmodel: HomeViewModel?
     var movieID: Int
+    var favoriteViewModel : FavoriteMoviesViewModel
+    
     
     @Query private var favoriteMovies: [FavoriteMovieModel]
     
@@ -112,7 +114,7 @@ struct MoviesDetailView: View {
                                     withAnimation {
                                         animateButton = true
                                     }
-                                    await addFavoriteMovie(movieId: movie.id, sessionID: sessionID)
+                                    await favoriteViewModel.addFavoriteMovie(movieId: movie.id, sessionID: sessionID)
                                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) { // 🔹 Pequeño delay para transición visual
                                         withAnimation {
                                             isFavorite = true
@@ -199,7 +201,7 @@ struct MoviesDetailView: View {
     }
 }
 
-#Preview {
-    MoviesDetailView(movieID: 1064213)
-}
+//#Preview {
+//    MoviesDetailView(movieID: 1064213)
+//}
 

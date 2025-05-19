@@ -11,6 +11,7 @@ import SwiftData
 struct MyMoviesView: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var favoriteMovies: [FavoriteMovieModel]
+    var favoriteViewModel = FavoriteMoviesViewModel()
     
     @Environment(\.presentationMode) var presentationMode
     @Binding var selectedTab: Int
@@ -52,22 +53,22 @@ struct MyMoviesView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .task {
                     if let sessionID = UserDefaults.standard.string(forKey: "sessionId"){
-                        await getFavouriteMovies(sessionId: sessionID, modelContext: modelContext)
+                        await favoriteViewModel.getFavouriteMovies(sessionId: sessionID, modelContext: modelContext)
                         print(favoriteMovies.count)
                     }
                 }
             }  else {
                 List {
                     ForEach(favoriteMovies) { favoriteMovie in
-                        NavigationLink(destination: MoviesDetailView(movieID: favoriteMovie.movie.id)){
+                        NavigationLink(destination: MoviesDetailView(movieID: favoriteMovie.movie.id, favoriteViewModel: favoriteViewModel)){
                             MovieRowView(favorite: favoriteMovie)
                         }
                             .swipeActions {
                                 Button(role: .destructive) {
                                     Task {
                                         if let sessionID = UserDefaults.standard.string(forKey: "sessionId"){
-                                            await deleteFavoriteMovie(movieId: favoriteMovie.movie.id, sessionID: sessionID, modelContext: modelContext)
-                                            await getFavouriteMovies(sessionId: sessionID, modelContext: modelContext)
+                                            await favoriteViewModel.deleteFavoriteMovie(movieId: favoriteMovie.movie.id, sessionID: sessionID, modelContext: modelContext)
+                                            await favoriteViewModel.getFavouriteMovies(sessionId: sessionID, modelContext: modelContext)
                                         }
                                     }
                                 } label: {
@@ -82,7 +83,7 @@ struct MyMoviesView: View {
                 .navigationTitle(Text("My Movies"))
                 .task {
                     if let sessionID = UserDefaults.standard.string(forKey: "sessionId"){
-                        await getFavouriteMovies(sessionId: sessionID, modelContext: modelContext)
+                        await favoriteViewModel.getFavouriteMovies(sessionId: sessionID, modelContext: modelContext)
                         print(favoriteMovies.count)
                     }
                 }

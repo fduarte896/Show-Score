@@ -13,6 +13,8 @@ struct MyTVShowsView: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var favoriteTVShows: [FavoriteTVShowModel]
     
+    var viewModel = TVShowsViewModel()
+    
     @Binding var selectedTab: Int
     
     var body: some View {
@@ -50,22 +52,22 @@ struct MyTVShowsView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .task {
                     if let sessionID = UserDefaults.standard.string(forKey: "sessionId"){
-                        await getFavouriteTVShows(sessionId: sessionID, modelContext: modelContext)
+                        await viewModel.getFavouriteTVShows(sessionId: sessionID, modelContext: modelContext)
                         print(favoriteTVShows.count)
                     }
                 }
             } else {
                 List {
                     ForEach(favoriteTVShows) { favoriteTVShow in
-                        NavigationLink(destination: TVShowsDetailView(tvShowId: favoriteTVShow.tvShow.id)) {
+                        NavigationLink(destination: TVShowsDetailView(tvShowId: favoriteTVShow.tvShow.id, viewModel: viewModel)) {
                             TVShowRowView(favorite: favoriteTVShow)
                         }
                         .swipeActions {
                             Button(role: .destructive) {
                                 Task {
                                     if let sessionID = UserDefaults.standard.string(forKey: "sessionId") {
-                                        await deleteFavoriteTVShow(tvShowId: favoriteTVShow.tvShow.id, sessionID: sessionID, modelContext: modelContext)
-                                        await getFavouriteTVShows(sessionId: sessionID, modelContext: modelContext)
+                                        await viewModel.deleteFavoriteTVShow(tvShowId: favoriteTVShow.tvShow.id, sessionID: sessionID, modelContext: modelContext)
+                                        await viewModel.getFavouriteTVShows(sessionId: sessionID, modelContext: modelContext)
                                     }
                                 }
                             } label: {
@@ -77,7 +79,7 @@ struct MyTVShowsView: View {
                 .navigationTitle("My TV Shows")
                 .task {
                     if let sessionID = UserDefaults.standard.string(forKey: "sessionId") {
-                        await getFavouriteTVShows(sessionId: sessionID, modelContext: modelContext)
+                        await viewModel.getFavouriteTVShows(sessionId: sessionID, modelContext: modelContext)
                         print(favoriteTVShows.count)
                     }
                 }
