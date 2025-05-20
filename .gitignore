@@ -1,0 +1,14 @@
+# Archivos secretos
+Secrets.xcconfig
+
+# Configuración de usuario
+*.xcuserstate
+*.xcuserdata/
+
+# Archivos derivados de compilación
+build/
+DerivedData/
+
+# Archivos temporales
+.DS_Store
+*.log
