@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0E4DA0B02DDD42DA00F8AF52 /* .gitignore.md in Resources */ = {isa = PBXBuildFile; fileRef = 0E4DA0AF2DDD42DA00F8AF52 /* .gitignore.md */; };
 		0EDD536A2DDB82A900360736 /* Secrets.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = 0EDD53692DDB82A900360736 /* Secrets.xcconfig */; };
 /* End PBXBuildFile section */
 
@@ -22,6 +23,7 @@
 
 /* Begin PBXFileReference section */
 		0E3A869B2D9C3AD200D8BC5B /* ShowScoreTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ShowScoreTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		0E4DA0AF2DDD42DA00F8AF52 /* .gitignore.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = .gitignore.md; sourceTree = "<group>"; };
 		0EDD53692DDB82A900360736 /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
 		0EE4B8E72D2DB42D00FEC95C /* Show Score.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Show Score.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -84,6 +86,7 @@
 		0EE4B8DE2D2DB42D00FEC95C = {
 			isa = PBXGroup;
 			children = (
+				0E4DA0AF2DDD42DA00F8AF52 /* .gitignore.md */,
 				0EDD53692DDB82A900360736 /* Secrets.xcconfig */,
 				0EE4B8E92D2DB42D00FEC95C /* Show Score */,
 				0E3A869C2D9C3AD200D8BC5B /* ShowScoreTests */,
@@ -202,6 +205,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				0EDD536A2DDB82A900360736 /* Secrets.xcconfig in Resources */,
+				0E4DA0B02DDD42DA00F8AF52 /* .gitignore.md in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

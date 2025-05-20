@@ -12,13 +12,7 @@ protocol MovieInteractorProtocol {
     func getPopularMovies() async throws -> [MovieModel]
 }
 
-//El interactor es quien hace
-//struct MovieInteractor : MovieInteractorProtocol {
-//    
-//    func getPopularMovies() async throws -> [MovieModel] {
-//        try await getModelFromJSON(request: .getRequest(url: .popularMovies), type: PopularMoviesResponseModelDecode.self).results.map(
-//    }
-//}
+
 
 struct MovieInteractor: MovieInteractorProtocol {
     func getPopularMovies() async throws -> [MovieModel] {
