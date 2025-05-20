@@ -331,6 +331,10 @@ extension MovieModel {
 
         
         struct Movies : Decodable {
+            
+            private var apiKey: String {
+                Bundle.main.infoDictionary?["TMDB_API_KEY"] as? String ?? ""
+            }
             let results: [Movie]
             //Definimos el struct para que se pueda usar con el modelo en swiftdata.
             struct Movie : Decodable {
@@ -366,6 +370,9 @@ extension MovieModel {
             }
             
         }
+        private var apiKey: String {
+            Bundle.main.infoDictionary?["TMDB_API_KEY"] as? String ?? ""
+        }
         
         //Ahora definimos la función para traer las películas.
         
@@ -384,7 +391,7 @@ extension MovieModel {
             request.timeoutInterval = 10
             request.allHTTPHeaderFields = [
                 "accept": "application/json",
-                "Authorization": "Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI5Y2ZjYmE2N2NmNDQzNzU3OGNmN2EwY2ZhNjU1ODI0YyIsIm5iZiI6MTY5OTg3OTg3MS4zMDcwMDAyLCJzdWIiOiI2NTUyMWJiZmZkNmZhMTAwYWI5NzFkMmYiLCJzY29wZXMiOlsiYXBpX3JlYWQiXSwidmVyc2lvbiI6MX0.peObVLgL6LnNpfdnr6VPK99q_Lvxm7U2DVr1VTt8z4w"
+                "Authorization": "Bearer \(apiKey)"
             ]
             
             do {
@@ -767,6 +774,10 @@ extension TVShowModel {
     @ModelActor
     actor BackgroundActor {
         
+        private var apiKey: String {
+            Bundle.main.infoDictionary?["TMDB_API_KEY"] as? String ?? ""
+        }
+        
         func downloadTVShowImages() async {
             let filter = #Predicate<TVShowModel> { $0.posterImage == nil }
             guard let tvShowsWithOutImages = try? modelContext.fetch(FetchDescriptor(predicate: filter)) else { return }
@@ -844,7 +855,7 @@ extension TVShowModel {
             request.timeoutInterval = 10
             request.allHTTPHeaderFields = [
               "accept": "application/json",
-              "Authorization": "Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI5Y2ZjYmE2N2NmNDQzNzU3OGNmN2EwY2ZhNjU1ODI0YyIsIm5iZiI6MTY5OTg3OTg3MS4zMDcwMDAyLCJzdWIiOiI2NTUyMWJiZmZkNmZhMTAwYWI5NzFkMmYiLCJzY29wZXMiOlsiYXBpX3JlYWQiXSwidmVyc2lvbiI6MX0.peObVLgL6LnNpfdnr6VPK99q_Lvxm7U2DVr1VTt8z4w"
+              "Authorization": "Bearer \(apiKey)"
             ]
 
             do {
@@ -1097,6 +1108,10 @@ extension PersonModel {
     @ModelActor
     actor BackgroundActor {
         
+        private var apiKey: String {
+            Bundle.main.infoDictionary?["TMDB_API_KEY"] as? String ?? ""
+        }
+        
         func downloadPeopleImages() async {
             let filter = #Predicate<PersonModel> { $0.profileImage == nil }
             guard let peopleWithOutImages = try? modelContext.fetch(FetchDescriptor(predicate: filter)) else { return }
@@ -1160,7 +1175,7 @@ extension PersonModel {
                     request.timeoutInterval = 10
                     request.allHTTPHeaderFields = [
                       "accept": "application/json",
-                      "Authorization": "Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI5Y2ZjYmE2N2NmNDQzNzU3OGNmN2EwY2ZhNjU1ODI0YyIsIm5iZiI6MTY5OTg3OTg3MS4zMDcwMDAyLCJzdWIiOiI2NTUyMWJiZmZkNmZhMTAwYWI5NzFkMmYiLCJzY29wZXMiOlsiYXBpX3JlYWQiXSwidmVyc2lvbiI6MX0.peObVLgL6LnNpfdnr6VPK99q_Lvxm7U2DVr1VTt8z4w"
+                      "Authorization": "Bearer \(apiKey)"
                     ]
 
                     do {

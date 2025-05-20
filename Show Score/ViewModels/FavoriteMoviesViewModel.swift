@@ -10,6 +10,9 @@ import SwiftData
 
 @MainActor
 final class FavoriteMoviesViewModel: ObservableObject {
+    private var apiKey: String {
+        Bundle.main.infoDictionary?["TMDB_API_KEY"] as? String ?? ""
+    }
     func getFavouriteMovies(sessionId: String, modelContext: ModelContext) async {
         let url = URL(string: "https://api.themoviedb.org/3/account/\(sessionId)/favorite/movies")!
         var components = URLComponents(url: url, resolvingAgainstBaseURL: true)!
@@ -20,12 +23,13 @@ final class FavoriteMoviesViewModel: ObservableObject {
         ]
         components.queryItems = components.queryItems.map { $0 + queryItems } ?? queryItems
 
+        
         var request = URLRequest(url: components.url!)
         request.httpMethod = "GET"
         request.timeoutInterval = 10
         request.allHTTPHeaderFields = [
             "accept": "application/json",
-            "Authorization": "Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI5Y2ZjYmE2N2NmNDQzNzU3OGNmN2EwY2ZhNjU1ODI0YyIsIm5iZiI6MTY5OTg3OTg3MS4zMDcwMDAyLCJzdWIiOiI2NTUyMWJiZmZkNmZhMTAwYWI5NzFkMmYiLCJzY29wZXMiOlsiYXBpX3JlYWQiXSwidmVyc2lvbiI6MX0.peObVLgL6LnNpfdnr6VPK99q_Lvxm7U2DVr1VTt8z4w"
+            "Authorization": "Bearer \(apiKey)"
         ]
 
         do {
@@ -75,6 +79,8 @@ final class FavoriteMoviesViewModel: ObservableObject {
           "media_id": "\(movieId)",
           "favorite": true
         ] as [String : Any?]
+        
+        
 
         do {
             let postData = try JSONSerialization.data(withJSONObject: parameters, options: [])
@@ -86,7 +92,7 @@ final class FavoriteMoviesViewModel: ObservableObject {
             request.allHTTPHeaderFields = [
               "accept": "application/json",
               "content-type": "application/json",
-              "Authorization": "Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI5Y2ZjYmE2N2NmNDQzNzU3OGNmN2EwY2ZhNjU1ODI0YyIsIm5iZiI6MTY5OTg3OTg3MS4zMDcwMDAyLCJzdWIiOiI2NTUyMWJiZmZkNmZhMTAwYWI5NzFkMmYiLCJzY29wZXMiOlsiYXBpX3JlYWQiXSwidmVyc2lvbiI6MX0.peObVLgL6LnNpfdnr6VPK99q_Lvxm7U2DVr1VTt8z4w"
+              "Authorization": "Bearer \(apiKey)"
             ]
             request.httpBody = postData
             let (data, response) = try await URLSession.shared.data(for: request)
@@ -121,7 +127,7 @@ final class FavoriteMoviesViewModel: ObservableObject {
             request.allHTTPHeaderFields = [
               "accept": "application/json",
               "content-type": "application/json",
-              "Authorization": "Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI5Y2ZjYmE2N2NmNDQzNzU3OGNmN2EwY2ZhNjU1ODI0YyIsIm5iZiI6MTY5OTg3OTg3MS4zMDcwMDAyLCJzdWIiOiI2NTUyMWJiZmZkNmZhMTAwYWI5NzFkMmYiLCJzY29wZXMiOlsiYXBpX3JlYWQiXSwidmVyc2lvbiI6MX0.peObVLgL6LnNpfdnr6VPK99q_Lvxm7U2DVr1VTt8z4w"
+              "Authorization": "Bearer \(apiKey)"
             ]
             request.httpBody = postData
             let (data, response) = try await URLSession.shared.data(for: request)

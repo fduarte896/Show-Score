@@ -15,6 +15,10 @@ final class HomeViewModel: ObservableObject {
         self.interactor = interactor
     
     }
+    
+    private var apiKey: String {
+        Bundle.main.infoDictionary?["TMDB_API_KEY"] as? String ?? ""
+    }
 
     func fetchSearchResults(query: String) async {
         guard !query.isEmpty else {
@@ -40,7 +44,7 @@ final class HomeViewModel: ObservableObject {
         request.timeoutInterval = 10
         request.allHTTPHeaderFields = [
             "accept": "application/json",
-            "Authorization": "Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI5Y2ZjYmE2N2NmNDQzNzU3OGNmN2EwY2ZhNjU1ODI0YyIsIm5iZiI6MTY5OTg3OTg3MS4zMDcwMDAyLCJzdWIiOiI2NTUyMWJiZmZkNmZhMTAwYWI5NzFkMmYiLCJzY29wZXMiOlsiYXBpX3JlYWQiXSwidmVyc2lvbiI6MX0.peObVLgL6LnNpfdnr6VPK99q_Lvxm7U2DVr1VTt8z4w"
+            "Authorization": "Bearer \(apiKey)"
         ]
         
         do {
@@ -50,7 +54,7 @@ final class HomeViewModel: ObservableObject {
                 let decodedResponse = try JSONDecoder().decode(SearchResponse.self, from: data)
                 searchResults = decodedResponse.results
                 print("✅ Resultados obtenidos: \(decodedResponse.results.count)")
-//                decodedResponse.results.forEach { print($0.name) }
+
             } else {
                 print("⚠️ Error en la respuesta: \(response)")
             }

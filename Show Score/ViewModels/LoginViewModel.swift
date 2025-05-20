@@ -14,14 +14,23 @@ class LoginViewModel: ObservableObject {
     
     @Published var currentUser: UserModel?
     
-    private let authHeader = [
-        "accept": "application/json",
-        "Authorization": "Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI5Y2ZjYmE2N2NmNDQzNzU3OGNmN2EwY2ZhNjU1ODI0YyIsIm5iZiI6MTY5OTg3OTg3MS4zMDcwMDAyLCJzdWIiOiI2NTUyMWJiZmZkNmZhMTAwYWI5NzFkMmYiLCJzY29wZXMiOlsiYXBpX3JlYWQiXSwidmVyc2lvbiI6MX0.peObVLgL6LnNpfdnr6VPK99q_Lvxm7U2DVr1VTt8z4w", // Reemplazar por tu token real
-        "content-type": "application/json"
-    ]
+    
+    private var apiKey: String {
+        Bundle.main.infoDictionary?["TMDB_API_KEY"] as? String ?? ""
+    }
+    
+    private var authHeader: [String: String] {
+        [
+            "accept": "application/json",
+            "Authorization": "Bearer \(apiKey)",
+            "content-type": "application/json"
+        ]
+    }
     
     // MARK: - Obtener Request Token
     func fetchRequestToken() async {
+        print("🔐 apiKey desde Info.plist: \(apiKey)")
+        print("📩 authHeader: \(authHeader)")
         isLoading = true
         defer { isLoading = false }
 
@@ -35,7 +44,7 @@ class LoginViewModel: ObservableObject {
             let decoded = try JSONDecoder().decode(RequestTokenResponse.self, from: data)
             self.requestToken = decoded.request_token
             UserDefaults.standard.set(decoded.request_token, forKey: "requestToken")
-
+            print("la apikey escondida es \(apiKey)")
             print("🎫 Token obtenido: \(decoded.request_token)")
             self.tokenRequested = true
         } catch {
@@ -131,7 +140,7 @@ class LoginViewModel: ObservableObject {
         request.timeoutInterval = 10
         request.allHTTPHeaderFields = [
           "accept": "application/json",
-          "Authorization": "Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI5Y2ZjYmE2N2NmNDQzNzU3OGNmN2EwY2ZhNjU1ODI0YyIsIm5iZiI6MTY5OTg3OTg3MS4zMDcwMDAyLCJzdWIiOiI2NTUyMWJiZmZkNmZhMTAwYWI5NzFkMmYiLCJzY29wZXMiOlsiYXBpX3JlYWQiXSwidmVyc2lvbiI6MX0.peObVLgL6LnNpfdnr6VPK99q_Lvxm7U2DVr1VTt8z4w"
+          "Authorization": "Bearer \(apiKey)"
         ]
 
         do {
